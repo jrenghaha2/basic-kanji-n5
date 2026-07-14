@@ -75,6 +75,16 @@
             to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
+        .jukugo-highlight {
+            animation: jukugoFlash 1.8s ease-out forwards;
+        }
+
+        @keyframes jukugoFlash {
+            0%   { background-color: #fefce8; box-shadow: 0 0 0 4px #fde04733; }
+            35%  { background-color: #fefce8; }
+            100% { background-color: transparent; box-shadow: none; }
+        }
+
         .flashcard {
             perspective: 1000px;
         }
@@ -313,8 +323,8 @@
                 
                 <!-- Jukugo examples -->
                 <div id="modal-jukugo-container" class="hidden">
-                    <div class="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-1.5 px-1">Contoh Jukugo</div>
-                    <div id="modal-jukugo" class="flex flex-wrap gap-1.5"></div>
+                    <div class="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-1.5 px-1">Contoh Jukugo (cara baca & arti)</div>
+                    <div id="modal-jukugo" class="flex flex-col gap-y-1.5 text-sm"></div>
                 </div>
                 
                 <!-- Category -->
@@ -529,108 +539,444 @@
         // Data Kanji
         const kanjiList = [
             // TOP 15 - Prioritas
-            { id: 1, kanji: "手", baca: "て", arti: "tangan", freq: 10, jukugo: "上手, 下手, 手前, 右手", category: "Prioritas" },
-            { id: 2, kanji: "口", baca: "くち", arti: "mulut", freq: 9, jukugo: "人口, 出口, 口先", category: "Prioritas" },
-            { id: 3, kanji: "人", baca: "ひと・じん", arti: "orang", freq: 9, jukugo: "人間, 日本人, 中国人", category: "Prioritas" },
-            { id: 4, kanji: "社", baca: "しゃ", arti: "perusahaan", freq: 9, jukugo: "会社, 社会, 社長", category: "Prioritas" },
-            { id: 5, kanji: "学", baca: "がく", arti: "ilmu / belajar", freq: 7, jukugo: "大学, 見学, 小学校", category: "Prioritas" },
-            { id: 6, kanji: "会", baca: "かい", arti: "bertemu", freq: 6, jukugo: "会話, 社会, 会社", category: "Prioritas" },
-            { id: 7, kanji: "来", baca: "らい", arti: "datang", freq: 6, jukugo: "来年, 来週, 出来る", category: "Prioritas" },
-            { id: 8, kanji: "国", baca: "くに・こく", arti: "negara", freq: 6, jukugo: "中国, 帰国, 米国", category: "Prioritas" },
-            { id: 9, kanji: "目", baca: "め", arti: "mata", freq: 6, jukugo: "一目, 目上, 名目", category: "Prioritas" },
-            { id: 10, kanji: "子", baca: "こ", arti: "anak", freq: 6, jukugo: "子供, 女子, 母子", category: "Prioritas" },
-            { id: 11, kanji: "母", baca: "はは", arti: "ibu", freq: 5, jukugo: "", category: "Prioritas" },
-            { id: 12, kanji: "足", baca: "あし", arti: "kaki", freq: 5, jukugo: "", category: "Prioritas" },
-            { id: 13, kanji: "大", baca: "おおきい", arti: "besar", freq: 5, jukugo: "", category: "Prioritas" },
-            { id: 14, kanji: "校", baca: "こう", arti: "sekolah", freq: 4, jukugo: "", category: "Prioritas" },
-            { id: 15, kanji: "書", baca: "かく", arti: "menulis", freq: 4, jukugo: "", category: "Prioritas" },
+            { id: 1, kanji: "手", baca: "て", arti: "tangan", freq: 10, jukugo: [
+                { kata: "上手", baca: "じょうず", arti: "pintar / mahir" },
+                { kata: "下手", baca: "へた", arti: "tidak mahir / jelek" },
+                { kata: "手前", baca: "てまえ", arti: "depan / sebelah sini" },
+                { kata: "右手", baca: "みぎて", arti: "tangan kanan" },
+                { kata: "左手", baca: "ひだりて", arti: "tangan kiri" },
+                { kata: "手紙", baca: "てがみ", arti: "surat" },
+                { kata: "手伝う", baca: "てつだう", arti: "membantu" }
+            ], category: "Prioritas" },
+            { id: 2, kanji: "口", baca: "くち", arti: "mulut", freq: 9, jukugo: [
+                { kata: "人口", baca: "じんこう", arti: "populasi / jumlah penduduk" },
+                { kata: "出口", baca: "でぐち", arti: "pintu keluar" },
+                { kata: "入口", baca: "いりぐち", arti: "pintu masuk" },
+                { kata: "口先", baca: "くちさき", arti: "ucapan / janji (sering kosong)" },
+                { kata: "口紅", baca: "くちべに", arti: "lipstik" }
+            ], category: "Prioritas" },
+            { id: 3, kanji: "人", baca: "ひと・じん", arti: "orang", freq: 9, jukugo: [
+                { kata: "人間", baca: "にんげん", arti: "manusia" },
+                { kata: "日本人", baca: "にほんじん", arti: "orang Jepang" },
+                { kata: "中国人", baca: "ちゅうごくじん", arti: "orang Cina" },
+                { kata: "外国人", baca: "がいこくじん", arti: "orang asing" },
+                { kata: "大人", baca: "おとな", arti: "orang dewasa" },
+                { kata: "友人", baca: "ゆうじん", arti: "teman" }
+            ], category: "Prioritas" },
+            { id: 4, kanji: "社", baca: "しゃ", arti: "perusahaan", freq: 9, jukugo: [
+                { kata: "会社", baca: "かいしゃ", arti: "perusahaan" },
+                { kata: "社会", baca: "しゃかい", arti: "masyarakat" },
+                { kata: "社長", baca: "しゃちょう", arti: "direktur perusahaan" },
+                { kata: "社員", baca: "しゃいん", arti: "karyawan perusahaan" },
+                { kata: "社内", baca: "しゃない", arti: "dalam perusahaan" }
+            ], category: "Prioritas" },
+            { id: 5, kanji: "学", baca: "がく", arti: "ilmu / belajar", freq: 7, jukugo: [
+                { kata: "大学", baca: "だいがく", arti: "universitas" },
+                { kata: "見学", baca: "けんがく", arti: "kunjungan belajar / observasi" },
+                { kata: "小学校", baca: "しょうがっこう", arti: "sekolah dasar" },
+                { kata: "中学校", baca: "ちゅうがっこう", arti: "sekolah menengah pertama" },
+                { kata: "学生", baca: "がくせい", arti: "pelajar / mahasiswa" },
+                { kata: "学校", baca: "がっこう", arti: "sekolah" }
+            ], category: "Prioritas" },
+            { id: 6, kanji: "会", baca: "かい", arti: "bertemu", freq: 6, jukugo: [
+                { kata: "会話", baca: "かいわ", arti: "percakapan" },
+                { kata: "社会", baca: "しゃかい", arti: "masyarakat" },
+                { kata: "会社", baca: "かいしゃ", arti: "perusahaan" },
+                { kata: "会議", baca: "かいぎ", arti: "rapat / meeting" },
+                { kata: "会場", baca: "かいじょう", arti: "tempat pertemuan" },
+                { kata: "入会", baca: "にゅうかい", arti: "bergabung / menjadi anggota" }
+            ], category: "Prioritas" },
+            { id: 7, kanji: "来", baca: "らい", arti: "datang", freq: 6, jukugo: [
+                { kata: "来年", baca: "らいねん", arti: "tahun depan" },
+                { kata: "来週", baca: "らいしゅう", arti: "minggu depan" },
+                { kata: "来月", baca: "らいげつ", arti: "bulan depan" },
+                { kata: "出来る", baca: "できる", arti: "bisa / mampu melakukan" },
+                { kata: "来客", baca: "らいきゃく", arti: "tamu yang datang" }
+            ], category: "Prioritas" },
+            { id: 8, kanji: "国", baca: "くに・こく", arti: "negara", freq: 6, jukugo: [
+                { kata: "中国", baca: "ちゅうごく", arti: "Cina" },
+                { kata: "帰国", baca: "きこく", arti: "pulang ke tanah air" },
+                { kata: "米国", baca: "べいこく", arti: "Amerika Serikat" },
+                { kata: "外国", baca: "がいこく", arti: "luar negeri" },
+                { kata: "国際", baca: "こくさい", arti: "internasional" },
+                { kata: "国旗", baca: "こっき", arti: "bendera negara" }
+            ], category: "Prioritas" },
+            { id: 9, kanji: "目", baca: "め", arti: "mata", freq: 6, jukugo: [
+                { kata: "一目", baca: "いちもく", arti: "sekilas / pandangan pertama" },
+                { kata: "目上", baca: "めうえ", arti: "atasan / senior" },
+                { kata: "目下", baca: "めした", arti: "bawahan / junior" },
+                { kata: "名目", baca: "めいもく", arti: "nama / secara nominal" },
+                { kata: "目的", baca: "もくてき", arti: "tujuan" },
+                { kata: "注目", baca: "ちゅうもく", arti: "perhatian / fokus" }
+            ], category: "Prioritas" },
+            { id: 10, kanji: "子", baca: "こ", arti: "anak", freq: 6, jukugo: [
+                { kata: "子供", baca: "こども", arti: "anak / anak-anak" },
+                { kata: "女子", baca: "じょし", arti: "wanita / gadis" },
+                { kata: "母子", baca: "ぼし", arti: "ibu dan anak" },
+                { kata: "男子", baca: "だんし", arti: "pria / laki-laki" },
+                { kata: "子猫", baca: "こねこ", arti: "anak kucing" },
+                { kata: "子犬", baca: "こいぬ", arti: "anak anjing" }
+            ], category: "Prioritas" },
+            { id: 11, kanji: "母", baca: "はは", arti: "ibu", freq: 5, jukugo: [
+                { kata: "母親", baca: "ははおや", arti: "ibu" },
+                { kata: "母国", baca: "ぼこく", arti: "tanah air / negara ibu" },
+                { kata: "父母", baca: "ふぼ", arti: "orang tua" }
+            ], category: "Prioritas" },
+            { id: 12, kanji: "足", baca: "あし", arti: "kaki", freq: 5, jukugo: [
+                { kata: "足元", baca: "あしもと", arti: "sekitar kaki / di bawah kaki" },
+                { kata: "足音", baca: "あしおと", arti: "suara langkah kaki" },
+                { kata: "足袋", baca: "たび", arti: "kaos kaki Jepang tradisional" }
+            ], category: "Prioritas" },
+            { id: 13, kanji: "大", baca: "おおきい", arti: "besar", freq: 5, jukugo: [
+                { kata: "大事", baca: "だいじ", arti: "penting / berharga" },
+                { kata: "大切", baca: "たいせつ", arti: "penting / berharga" },
+                { kata: "大人", baca: "おとな", arti: "orang dewasa" }
+            ], category: "Prioritas" },
+            { id: 14, kanji: "校", baca: "こう", arti: "sekolah", freq: 4, jukugo: [
+                { kata: "学校", baca: "がっこう", arti: "sekolah" },
+                { kata: "校長", baca: "こうちょう", arti: "kepala sekolah" },
+                { kata: "校舎", baca: "こうしゃ", arti: "gedung sekolah" }
+            ], category: "Prioritas" },
+            { id: 15, kanji: "書", baca: "かく", arti: "menulis", freq: 4, jukugo: [
+                { kata: "読書", baca: "どくしょ", arti: "membaca buku" },
+                { kata: "書店", baca: "しょてん", arti: "toko buku" },
+                { kata: "手紙", baca: "てがみ", arti: "surat" }
+            ], category: "Prioritas" },
             
             // Orang & Keluarga
-            { id: 16, kanji: "女", baca: "おんな", arti: "wanita", freq: 0, jukugo: "", category: "Orang & Keluarga" },
-            { id: 17, kanji: "男", baca: "おとこ", arti: "laki-laki", freq: 0, jukugo: "", category: "Orang & Keluarga" },
-            { id: 18, kanji: "父", baca: "ちち", arti: "ayah", freq: 0, jukugo: "", category: "Orang & Keluarga" },
-            { id: 19, kanji: "友", baca: "とも", arti: "teman", freq: 0, jukugo: "", category: "Orang & Keluarga" },
-            { id: 20, kanji: "員", baca: "いん", arti: "anggota", freq: 0, jukugo: "", category: "Orang & Keluarga" },
-            { id: 21, kanji: "名", baca: "な", arti: "nama", freq: 0, jukugo: "", category: "Orang & Keluarga" },
+            { id: 16, kanji: "女", baca: "おんな", arti: "wanita", freq: 0, jukugo: [
+                { kata: "女性", baca: "じょせい", arti: "wanita" },
+                { kata: "女子", baca: "じょし", arti: "gadis / wanita muda" },
+                { kata: "女の子", baca: "おんなのこ", arti: "anak perempuan" }
+            ], category: "Orang & Keluarga" },
+            { id: 17, kanji: "男", baca: "おとこ", arti: "laki-laki", freq: 0, jukugo: [
+                { kata: "男性", baca: "だんせい", arti: "pria" },
+                { kata: "男子", baca: "だんし", arti: "pria / laki-laki muda" },
+                { kata: "男の子", baca: "おとこのこ", arti: "anak laki-laki" }
+            ], category: "Orang & Keluarga" },
+            { id: 18, kanji: "父", baca: "ちち", arti: "ayah", freq: 0, jukugo: [
+                { kata: "父親", baca: "ちちおや", arti: "ayah" },
+                { kata: "父母", baca: "ふぼ", arti: "orang tua" },
+                { kata: "父の日", baca: "ちちのひ", arti: "Hari Ayah" }
+            ], category: "Orang & Keluarga" },
+            { id: 19, kanji: "友", baca: "とも", arti: "teman", freq: 0, jukugo: [
+                { kata: "友人", baca: "ゆうじん", arti: "teman" },
+                { kata: "友達", baca: "ともだち", arti: "teman" },
+                { kata: "親友", baca: "しんゆう", arti: "teman dekat / sahabat" }
+            ], category: "Orang & Keluarga" },
+            { id: 20, kanji: "員", baca: "いん", arti: "anggota", freq: 0, jukugo: [
+                { kata: "会社員", baca: "かいしゃいん", arti: "karyawan perusahaan" },
+                { kata: "店員", baca: "てんいん", arti: "karyawan toko" },
+                { kata: "議員", baca: "ぎいん", arti: "anggota dewan / politisi" }
+            ], category: "Orang & Keluarga" },
+            { id: 21, kanji: "名", baca: "な", arti: "nama", freq: 0, jukugo: [
+                { kata: "名前", baca: "なまえ", arti: "nama" },
+                { kata: "有名", baca: "ゆうめい", arti: "terkenal" },
+                { kata: "姓名", baca: "せいめい", arti: "nama lengkap" }
+            ], category: "Orang & Keluarga" },
             
             // Anggota Tubuh
-            { id: 22, kanji: "頭", baca: "あたま", arti: "kepala", freq: 0, jukugo: "", category: "Anggota Tubuh" },
-            { id: 23, kanji: "耳", baca: "みみ", arti: "telinga", freq: 0, jukugo: "", category: "Anggota Tubuh" },
-            { id: 24, kanji: "体", baca: "からだ", arti: "badan", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            { id: 22, kanji: "頭", baca: "あたま", arti: "kepala", freq: 0, jukugo: [
+                { kata: "頭痛", baca: "ずつう", arti: "sakit kepala" },
+                { kata: "頭髪", baca: "とうはつ", arti: "rambut kepala" }
+            ], category: "Anggota Tubuh" },
+            { id: 23, kanji: "耳", baca: "みみ", arti: "telinga", freq: 0, jukugo: [
+                { kata: "耳鼻科", baca: "じびか", arti: "klinik THT" },
+                { kata: "耳元", baca: "みみもと", arti: "dekat telinga" }
+            ], category: "Anggota Tubuh" },
+            { id: 24, kanji: "体", baca: "からだ", arti: "badan", freq: 0, jukugo: [
+                { kata: "体温", baca: "たいおん", arti: "suhu badan" },
+                { kata: "体育", baca: "たいいく", arti: "olahraga / pendidikan jasmani" },
+                { kata: "体調", baca: "たいちょう", arti: "kondisi badan" }
+            ], category: "Anggota Tubuh" },
             
-            // Tambahan Anggota Tubuh (lebih lengkap untuk N5)
-            { id: 83, kanji: "鼻", baca: "はな", arti: "hidung", freq: 0, jukugo: "", category: "Anggota Tubuh" },
-            { id: 84, kanji: "歯", baca: "は", arti: "gigi", freq: 0, jukugo: "", category: "Anggota Tubuh" },
-            { id: 85, kanji: "顔", baca: "かお", arti: "wajah", freq: 0, jukugo: "", category: "Anggota Tubuh" },
-            { id: 86, kanji: "首", baca: "くび", arti: "leher", freq: 0, jukugo: "", category: "Anggota Tubuh" },
-            { id: 87, kanji: "指", baca: "ゆび", arti: "jari", freq: 0, jukugo: "", category: "Anggota Tubuh" },
-            { id: 88, kanji: "髪", baca: "かみ", arti: "rambut", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            // Tambahan Anggota Tubuh
+            { id: 83, kanji: "鼻", baca: "はな", arti: "hidung", freq: 0, jukugo: [
+                { kata: "鼻水", baca: "はなみず", arti: "ingus" },
+                { kata: "鼻血", baca: "はなぢ", arti: "mimisan" }
+            ], category: "Anggota Tubuh" },
+            { id: 84, kanji: "歯", baca: "は", arti: "gigi", freq: 0, jukugo: [
+                { kata: "歯医者", baca: "はいしゃ", arti: "dokter gigi" },
+                { kata: "歯ブラシ", baca: "はぶらし", arti: "sikat gigi" }
+            ], category: "Anggota Tubuh" },
+            { id: 85, kanji: "顔", baca: "かお", arti: "wajah", freq: 0, jukugo: [
+                { kata: "顔色", baca: "かおいろ", arti: "warna muka / ekspresi" },
+                { kata: "顔立ち", baca: "かおだち", arti: "ciri-ciri wajah" }
+            ], category: "Anggota Tubuh" },
+            { id: 86, kanji: "首", baca: "くび", arti: "leher", freq: 0, jukugo: [
+                { kata: "首輪", baca: "くびわ", arti: "kalung / collar" },
+                { kata: "首相", baca: "しゅしょう", arti: "perdana menteri" }
+            ], category: "Anggota Tubuh" },
+            { id: 87, kanji: "指", baca: "ゆび", arti: "jari", freq: 0, jukugo: [
+                { kata: "指輪", baca: "ゆびわ", arti: "cincin" },
+                { kata: "親指", baca: "おやゆび", arti: "jempol" }
+            ], category: "Anggota Tubuh" },
+            { id: 88, kanji: "髪", baca: "かみ", arti: "rambut", freq: 0, jukugo: [
+                { kata: "髪の毛", baca: "かみのけ", arti: "rambut" },
+                { kata: "白髪", baca: "しらが", arti: "uban" }
+            ], category: "Anggota Tubuh" },
             
             // Tempat & Benda
-            { id: 25, kanji: "店", baca: "みせ", arti: "toko", freq: 0, jukugo: "", category: "Tempat & Benda" },
-            { id: 26, kanji: "車", baca: "くるま", arti: "mobil", freq: 0, jukugo: "", category: "Tempat & Benda" },
-            { id: 27, kanji: "道", baca: "みち", arti: "jalan", freq: 0, jukugo: "", category: "Tempat & Benda" },
-            { id: 28, kanji: "駅", baca: "えき", arti: "stasiun", freq: 0, jukugo: "", category: "Tempat & Benda" },
-            { id: 29, kanji: "本", baca: "ほん", arti: "buku", freq: 0, jukugo: "", category: "Tempat & Benda" },
-            { id: 30, kanji: "電", baca: "でん", arti: "listrik", freq: 0, jukugo: "", category: "Tempat & Benda" },
-            { id: 31, kanji: "家", baca: "いえ", arti: "rumah", freq: 0, jukugo: "", category: "Tempat & Benda" },
-            { id: 32, kanji: "田", baca: "た", arti: "sawah", freq: 0, jukugo: "", category: "Tempat & Benda" },
-            { id: 33, kanji: "門", baca: "もん", arti: "gerbang", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            { id: 25, kanji: "店", baca: "みせ", arti: "toko", freq: 0, jukugo: [
+                { kata: "店員", baca: "てんいん", arti: "karyawan toko" },
+                { kata: "店長", baca: "てんちょう", arti: "kepala toko" },
+                { kata: "書店", baca: "しょてん", arti: "toko buku" }
+            ], category: "Tempat & Benda" },
+            { id: 26, kanji: "車", baca: "くるま", arti: "mobil", freq: 0, jukugo: [
+                { kata: "電車", baca: "でんしゃ", arti: "kereta listrik" },
+                { kata: "自動車", baca: "じどうしゃ", arti: "mobil" },
+                { kata: "駐車場", baca: "ちゅうしゃじょう", arti: "tempat parkir" }
+            ], category: "Tempat & Benda" },
+            { id: 27, kanji: "道", baca: "みち", arti: "jalan", freq: 0, jukugo: [
+                { kata: "道路", baca: "どうろ", arti: "jalan raya" },
+                { kata: "歩道", baca: "ほどう", arti: "trotoar" },
+                { kata: "近道", baca: "ちかみち", arti: "jalan pintas" }
+            ], category: "Tempat & Benda" },
+            { id: 28, kanji: "駅", baca: "えき", arti: "stasiun", freq: 0, jukugo: [
+                { kata: "駅員", baca: "えきいん", arti: "petugas stasiun" },
+                { kata: "駅前", baca: "えきまえ", arti: "depan stasiun" },
+                { kata: "地下鉄", baca: "ちかてつ", arti: "kereta bawah tanah" }
+            ], category: "Tempat & Benda" },
+            { id: 29, kanji: "本", baca: "ほん", arti: "buku", freq: 0, jukugo: [
+                { kata: "本屋", baca: "ほんや", arti: "toko buku" },
+                { kata: "読本", baca: "どくほん", arti: "buku bacaan" },
+                { kata: "手本", baca: "てほん", arti: "contoh / teladan" }
+            ], category: "Tempat & Benda" },
+            { id: 30, kanji: "電", baca: "でん", arti: "listrik", freq: 0, jukugo: [
+                { kata: "電車", baca: "でんしゃ", arti: "kereta listrik" },
+                { kata: "電話", baca: "でんわ", arti: "telepon" },
+                { kata: "電気", baca: "でんき", arti: "listrik" }
+            ], category: "Tempat & Benda" },
+            { id: 31, kanji: "家", baca: "いえ", arti: "rumah", freq: 0, jukugo: [
+                { kata: "家内", baca: "かない", arti: "istri / keluarga" },
+                { kata: "家事", baca: "かじ", arti: "pekerjaan rumah tangga" },
+                { kata: "家賃", baca: "やちん", arti: "sewa rumah" }
+            ], category: "Tempat & Benda" },
+            { id: 32, kanji: "田", baca: "た", arti: "sawah", freq: 0, jukugo: [
+                { kata: "田舎", baca: "いなか", arti: "pedesaan" },
+                { kata: "田んぼ", baca: "たんぼ", arti: "sawah" }
+            ], category: "Tempat & Benda" },
+            { id: 33, kanji: "門", baca: "もん", arti: "gerbang", freq: 0, jukugo: [
+                { kata: "門限", baca: "もんげん", arti: "jam malam" },
+                { kata: "正門", baca: "せいもん", arti: "gerbang utama" }
+            ], category: "Tempat & Benda" },
             
             // Kata Kerja
-            { id: 34, kanji: "行", baca: "いく", arti: "pergi", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 35, kanji: "帰", baca: "かえる", arti: "pulang", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 36, kanji: "入", baca: "はいる", arti: "masuk", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 37, kanji: "出", baca: "でる", arti: "keluar", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 38, kanji: "聞", baca: "きく", arti: "mendengar", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 39, kanji: "見", baca: "みる", arti: "melihat", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 40, kanji: "言", baca: "いう", arti: "mengucapkan", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 41, kanji: "読", baca: "よむ", arti: "membaca", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 42, kanji: "話", baca: "はなす", arti: "berbicara", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 43, kanji: "買", baca: "かう", arti: "membeli", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 44, kanji: "立", baca: "たつ", arti: "berdiri", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 45, kanji: "食", baca: "たべる", arti: "makan", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 46, kanji: "売", baca: "うる", arti: "jual", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 47, kanji: "飲", baca: "のむ", arti: "minum", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 48, kanji: "持", baca: "もつ", arti: "membawa", freq: 0, jukugo: "", category: "Kata Kerja" },
-            { id: 49, kanji: "待", baca: "まつ", arti: "menunggu", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 34, kanji: "行", baca: "いく", arti: "pergi", freq: 0, jukugo: [
+                { kata: "旅行", baca: "りょこう", arti: "bepergian / traveling" },
+                { kata: "銀行", baca: "ぎんこう", arti: "bank" },
+                { kata: "実行", baca: "じっこう", arti: "melaksanakan" }
+            ], category: "Kata Kerja" },
+            { id: 35, kanji: "帰", baca: "かえる", arti: "pulang", freq: 0, jukugo: [
+                { kata: "帰国", baca: "きこく", arti: "pulang ke negara asal" },
+                { kata: "帰宅", baca: "きたく", arti: "pulang ke rumah" },
+                { kata: "帰り道", baca: "かえりみち", arti: "jalan pulang" }
+            ], category: "Kata Kerja" },
+            { id: 36, kanji: "入", baca: "はいる", arti: "masuk", freq: 0, jukugo: [
+                { kata: "入学", baca: "にゅうがく", arti: "masuk sekolah/universitas" },
+                { kata: "入院", baca: "にゅういん", arti: "masuk rumah sakit" },
+                { kata: "入国", baca: "にゅうこく", arti: "masuk ke negara" }
+            ], category: "Kata Kerja" },
+            { id: 37, kanji: "出", baca: "でる", arti: "keluar", freq: 0, jukugo: [
+                { kata: "出口", baca: "でぐち", arti: "pintu keluar" },
+                { kata: "出席", baca: "しゅっせき", arti: "hadir" },
+                { kata: "出版", baca: "しゅっぱん", arti: "menerbitkan" }
+            ], category: "Kata Kerja" },
+            { id: 38, kanji: "聞", baca: "きく", arti: "mendengar", freq: 0, jukugo: [
+                { kata: "新聞", baca: "しんぶん", arti: "koran" },
+                { kata: "聞取り", baca: "ききとり", arti: "mendengarkan (listening)" }
+            ], category: "Kata Kerja" },
+            { id: 39, kanji: "見", baca: "みる", arti: "melihat", freq: 0, jukugo: [
+                { kata: "見学", baca: "けんがく", arti: "kunjungan belajar" },
+                { kata: "見物", baca: "けんぶつ", arti: "melihat-lihat / sightseeing" },
+                { kata: "意見", baca: "いけん", arti: "pendapat" }
+            ], category: "Kata Kerja" },
+            { id: 40, kanji: "言", baca: "いう", arti: "mengucapkan", freq: 0, jukugo: [
+                { kata: "言葉", baca: "ことば", arti: "kata / bahasa" },
+                { kata: "伝言", baca: "でんごん", arti: "pesan" }
+            ], category: "Kata Kerja" },
+            { id: 41, kanji: "読", baca: "よむ", arti: "membaca", freq: 0, jukugo: [
+                { kata: "読書", baca: "どくしょ", arti: "membaca buku" },
+                { kata: "読者", baca: "どくしゃ", arti: "pembaca" }
+            ], category: "Kata Kerja" },
+            { id: 42, kanji: "話", baca: "はなす", arti: "berbicara", freq: 0, jukugo: [
+                { kata: "電話", baca: "でんわ", arti: "telepon" },
+                { kata: "会話", baca: "かいわ", arti: "percakapan" }
+            ], category: "Kata Kerja" },
+            { id: 43, kanji: "買", baca: "かう", arti: "membeli", freq: 0, jukugo: [
+                { kata: "買物", baca: "かいもの", arti: "belanja" },
+                { kata: "売買", baca: "ばいばい", arti: "jual beli" }
+            ], category: "Kata Kerja" },
+            { id: 44, kanji: "立", baca: "たつ", arti: "berdiri", freq: 0, jukugo: [
+                { kata: "立派", baca: "りっぱ", arti: "hebat / megah" },
+                { kata: "立場", baca: "たちば", arti: "posisi / pendirian" }
+            ], category: "Kata Kerja" },
+            { id: 45, kanji: "食", baca: "たべる", arti: "makan", freq: 0, jukugo: [
+                { kata: "食事", baca: "しょくじ", arti: "makan / santap" },
+                { kata: "食堂", baca: "しょくどう", arti: "kantin" }
+            ], category: "Kata Kerja" },
+            { id: 46, kanji: "売", baca: "うる", arti: "jual", freq: 0, jukugo: [
+                { kata: "販売", baca: "はんばい", arti: "penjualan" },
+                { kata: "売店", baca: "ばいてん", arti: "kios" }
+            ], category: "Kata Kerja" },
+            { id: 47, kanji: "飲", baca: "のむ", arti: "minum", freq: 0, jukugo: [
+                { kata: "飲料", baca: "いんりょう", arti: "minuman" },
+                { kata: "飲み物", baca: "のみもの", arti: "minuman" }
+            ], category: "Kata Kerja" },
+            { id: 48, kanji: "持", baca: "もつ", arti: "membawa", freq: 0, jukugo: [
+                { kata: "持病", baca: "じびょう", arti: "penyakit kronis" },
+                { kata: "持参", baca: "じさん", arti: "membawa sendiri" }
+            ], category: "Kata Kerja" },
+            { id: 49, kanji: "待", baca: "まつ", arti: "menunggu", freq: 0, jukugo: [
+                { kata: "期待", baca: "きたい", arti: "harapan" },
+                { kata: "待合室", baca: "まちあいしつ", arti: "ruang tunggu" }
+            ], category: "Kata Kerja" },
             
             // Kata Sifat
-            { id: 50, kanji: "安", baca: "やすい", arti: "murah", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 51, kanji: "高", baca: "たかい", arti: "tinggi / mahal", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 52, kanji: "新", baca: "あたらしい", arti: "baru", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 53, kanji: "古", baca: "ふるい", arti: "tua / lama", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 54, kanji: "小", baca: "ちいさい", arti: "kecil", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 55, kanji: "多", baca: "おおい", arti: "banyak", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 56, kanji: "少", baca: "すくない", arti: "sedikit", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 57, kanji: "好", baca: "すき", arti: "suka", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 58, kanji: "長", baca: "ながい", arti: "panjang", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 59, kanji: "短", baca: "みじかい", arti: "pendek", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 60, kanji: "白", baca: "しろい", arti: "putih", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 61, kanji: "黒", baca: "くろい", arti: "hitam", freq: 0, jukugo: "", category: "Kata Sifat" },
-            { id: 62, kanji: "明", baca: "あかるい", arti: "terang", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 50, kanji: "安", baca: "やすい", arti: "murah", freq: 0, jukugo: [
+                { kata: "安い", baca: "やすい", arti: "murah" },
+                { kata: "安全", baca: "あんぜん", arti: "aman / keselamatan" }
+            ], category: "Kata Sifat" },
+            { id: 51, kanji: "高", baca: "たかい", arti: "tinggi / mahal", freq: 0, jukugo: [
+                { kata: "高い", baca: "たかい", arti: "tinggi / mahal" },
+                { kata: "高校", baca: "こうこう", arti: "sekolah menengah atas" },
+                { kata: "高さ", baca: "たかさ", arti: "ketinggian" }
+            ], category: "Kata Sifat" },
+            { id: 52, kanji: "新", baca: "あたらしい", arti: "baru", freq: 0, jukugo: [
+                { kata: "新しい", baca: "あたらしい", arti: "baru" },
+                { kata: "新聞", baca: "しんぶん", arti: "koran" },
+                { kata: "新年", baca: "しんねん", arti: "tahun baru" }
+            ], category: "Kata Sifat" },
+            { id: 53, kanji: "古", baca: "ふるい", arti: "tua / lama", freq: 0, jukugo: [
+                { kata: "古い", baca: "ふるい", arti: "tua / lama" },
+                { kata: "古本", baca: "ふるほん", arti: "buku bekas" }
+            ], category: "Kata Sifat" },
+            { id: 54, kanji: "小", baca: "ちいさい", arti: "kecil", freq: 0, jukugo: [
+                { kata: "小さい", baca: "ちいさい", arti: "kecil" },
+                { kata: "小学校", baca: "しょうがっこう", arti: "sekolah dasar" },
+                { kata: "小学生", baca: "しょうがくせい", arti: "siswa SD" }
+            ], category: "Kata Sifat" },
+            { id: 55, kanji: "多", baca: "おおい", arti: "banyak", freq: 0, jukugo: [
+                { kata: "多い", baca: "おおい", arti: "banyak" },
+                { kata: "多分", baca: "たぶん", arti: "mungkin / barangkali" }
+            ], category: "Kata Sifat" },
+            { id: 56, kanji: "少", baca: "すくない", arti: "sedikit", freq: 0, jukugo: [
+                { kata: "少ない", baca: "すくない", arti: "sedikit" },
+                { kata: "少し", baca: "すこし", arti: "sedikit / agak" }
+            ], category: "Kata Sifat" },
+            { id: 57, kanji: "好", baca: "すき", arti: "suka", freq: 0, jukugo: [
+                { kata: "好き", baca: "すき", arti: "suka" },
+                { kata: "好物", baca: "こうぶつ", arti: "makanan favorit" }
+            ], category: "Kata Sifat" },
+            { id: 58, kanji: "長", baca: "ながい", arti: "panjang", freq: 0, jukugo: [
+                { kata: "長い", baca: "ながい", arti: "panjang" },
+                { kata: "長さ", baca: "ながさ", arti: "panjangnya" },
+                { kata: "長男", baca: "ちょうなん", arti: "anak laki-laki sulung" }
+            ], category: "Kata Sifat" },
+            { id: 59, kanji: "短", baca: "みじかい", arti: "pendek", freq: 0, jukugo: [
+                { kata: "短い", baca: "みじかい", arti: "pendek" },
+                { kata: "短所", baca: "たんしょ", arti: "kekurangan / kelemahan" }
+            ], category: "Kata Sifat" },
+            { id: 60, kanji: "白", baca: "しろい", arti: "putih", freq: 0, jukugo: [
+                { kata: "白い", baca: "しろい", arti: "putih" },
+                { kata: "白髪", baca: "しらが", arti: "uban" },
+                { kata: "白黒", baca: "しろくろ", arti: "hitam putih" }
+            ], category: "Kata Sifat" },
+            { id: 61, kanji: "黒", baca: "くろい", arti: "hitam", freq: 0, jukugo: [
+                { kata: "黒い", baca: "くろい", arti: "hitam" },
+                { kata: "黒板", baca: "こくばん", arti: "papan tulis" }
+            ], category: "Kata Sifat" },
+            { id: 62, kanji: "明", baca: "あかるい", arti: "terang", freq: 0, jukugo: [
+                { kata: "明るい", baca: "あかるい", arti: "terang / ceria" },
+                { kata: "明日", baca: "あした", arti: "besok" }
+            ], category: "Kata Sifat" },
             
             // Alam & Musim
-            { id: 63, kanji: "天", baca: "てん", arti: "surga / langit", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 64, kanji: "空", baca: "そら", arti: "langit", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 65, kanji: "山", baca: "やま", arti: "gunung", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 66, kanji: "川", baca: "かわ", arti: "sungai", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 67, kanji: "花", baca: "はな", arti: "bunga", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 68, kanji: "雨", baca: "あめ", arti: "hujan", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 69, kanji: "魚", baca: "さかな", arti: "ikan", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 70, kanji: "気", baca: "き", arti: "udara / jiwa", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 71, kanji: "牛", baca: "うし", arti: "sapi", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 72, kanji: "貝", baca: "かい", arti: "kerang", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 73, kanji: "力", baca: "ちから", arti: "kekuatan", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 74, kanji: "馬", baca: "うま", arti: "kuda", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 75, kanji: "冬", baca: "ふゆ", arti: "musim dingin", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 76, kanji: "秋", baca: "あき", arti: "musim gugur", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 77, kanji: "夏", baca: "なつ", arti: "musim panas", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 78, kanji: "春", baca: "はる", arti: "musim semi", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 79, kanji: "米", baca: "こめ", arti: "beras", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 80, kanji: "石", baca: "いし", arti: "batu", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 81, kanji: "竹", baca: "たけ", arti: "bambu", freq: 0, jukugo: "", category: "Alam & Musim" },
-            { id: 82, kanji: "油", baca: "あぶら", arti: "minyak", freq: 0, jukugo: "", category: "Alam & Musim" }
+            { id: 63, kanji: "天", baca: "てん", arti: "surga / langit", freq: 0, jukugo: [
+                { kata: "天気", baca: "てんき", arti: "cuaca" },
+                { kata: "天国", baca: "てんごく", arti: "surga" }
+            ], category: "Alam & Musim" },
+            { id: 64, kanji: "空", baca: "そら", arti: "langit", freq: 0, jukugo: [
+                { kata: "空気", baca: "くうき", arti: "udara" },
+                { kata: "空手", baca: "からて", arti: "karate" },
+                { kata: "青空", baca: "あおぞら", arti: "langit biru" }
+            ], category: "Alam & Musim" },
+            { id: 65, kanji: "山", baca: "やま", arti: "gunung", freq: 0, jukugo: [
+                { kata: "山川", baca: "さんせん", arti: "gunung dan sungai" },
+                { kata: "山道", baca: "やまみち", arti: "jalan gunung" },
+                { kata: "富士山", baca: "ふじさん", arti: "Gunung Fuji" }
+            ], category: "Alam & Musim" },
+            { id: 66, kanji: "川", baca: "かわ", arti: "sungai", freq: 0, jukugo: [
+                { kata: "川辺", baca: "かわべ", arti: "tepi sungai" },
+                { kata: "河川", baca: "かせん", arti: "sungai" }
+            ], category: "Alam & Musim" },
+            { id: 67, kanji: "花", baca: "はな", arti: "bunga", freq: 0, jukugo: [
+                { kata: "花見", baca: "はなみ", arti: "melihat bunga (hanami)" },
+                { kata: "花火", baca: "はなび", arti: "kembang api" },
+                { kata: "生花", baca: "いけばな", arti: "merangkai bunga" }
+            ], category: "Alam & Musim" },
+            { id: 68, kanji: "雨", baca: "あめ", arti: "hujan", freq: 0, jukugo: [
+                { kata: "雨天", baca: "うてん", arti: "cuaca hujan" },
+                { kata: "雨具", baca: "あまぐ", arti: "perlengkapan hujan" },
+                { kata: "大雨", baca: "おおあめ", arti: "hujan deras" }
+            ], category: "Alam & Musim" },
+            { id: 69, kanji: "魚", baca: "さかな", arti: "ikan", freq: 0, jukugo: [
+                { kata: "魚屋", baca: "さかなや", arti: "toko ikan" },
+                { kata: "金魚", baca: "きんぎょ", arti: "ikan mas koki" }
+            ], category: "Alam & Musim" },
+            { id: 70, kanji: "気", baca: "き", arti: "udara / jiwa", freq: 0, jukugo: [
+                { kata: "天気", baca: "てんき", arti: "cuaca" },
+                { kata: "元気", baca: "げんき", arti: "sehat / semangat" },
+                { kata: "気持ち", baca: "きもち", arti: "perasaan" }
+            ], category: "Alam & Musim" },
+            { id: 71, kanji: "牛", baca: "うし", arti: "sapi", freq: 0, jukugo: [
+                { kata: "牛肉", baca: "ぎゅうにく", arti: "daging sapi" },
+                { kata: "牛乳", baca: "ぎゅうにゅう", arti: "susu sapi" }
+            ], category: "Alam & Musim" },
+            { id: 72, kanji: "貝", baca: "かい", arti: "kerang", freq: 0, jukugo: [
+                { kata: "貝殻", baca: "かいがら", arti: "cangkang kerang" },
+                { kata: "貝類", baca: "かいるい", arti: "kerang-kerangan" }
+            ], category: "Alam & Musim" },
+            { id: 73, kanji: "力", baca: "ちから", arti: "kekuatan", freq: 0, jukugo: [
+                { kata: "力持ち", baca: "ちからもち", arti: "orang kuat" },
+                { kata: "協力", baca: "きょうりょく", arti: "kerja sama" }
+            ], category: "Alam & Musim" },
+            { id: 74, kanji: "馬", baca: "うま", arti: "kuda", freq: 0, jukugo: [
+                { kata: "馬力", baca: "ばりき", arti: "tenaga kuda" },
+                { kata: "競馬", baca: "けいば", arti: "pacuan kuda" }
+            ], category: "Alam & Musim" },
+            { id: 75, kanji: "冬", baca: "ふゆ", arti: "musim dingin", freq: 0, jukugo: [
+                { kata: "冬休み", baca: "ふゆやすみ", arti: "libur musim dingin" },
+                { kata: "冬物", baca: "ふゆもの", arti: "pakaian musim dingin" }
+            ], category: "Alam & Musim" },
+            { id: 76, kanji: "秋", baca: "あき", arti: "musim gugur", freq: 0, jukugo: [
+                { kata: "秋分", baca: "しゅうぶん", arti: "equinox musim gugur" },
+                { kata: "秋風", baca: "あきかぜ", arti: "angin musim gugur" }
+            ], category: "Alam & Musim" },
+            { id: 77, kanji: "夏", baca: "なつ", arti: "musim panas", freq: 0, jukugo: [
+                { kata: "夏休み", baca: "なつやすみ", arti: "libur musim panas" },
+                { kata: "夏物", baca: "なつもの", arti: "pakaian musim panas" }
+            ], category: "Alam & Musim" },
+            { id: 78, kanji: "春", baca: "はる", arti: "musim semi", freq: 0, jukugo: [
+                { kata: "春休み", baca: "はるやすみ", arti: "libur musim semi" },
+                { kata: "春風", baca: "はるかぜ", arti: "angin musim semi" }
+            ], category: "Alam & Musim" },
+            { id: 79, kanji: "米", baca: "こめ", arti: "beras", freq: 0, jukugo: [
+                { kata: "米飯", baca: "べいはん", arti: "nasi" },
+                { kata: "米国", baca: "べいこく", arti: "Amerika Serikat" }
+            ], category: "Alam & Musim" },
+            { id: 80, kanji: "石", baca: "いし", arti: "batu", freq: 0, jukugo: [
+                { kata: "石炭", baca: "せきたん", arti: "batu bara" },
+                { kata: "宝石", baca: "ほうせき", arti: "batu permata" }
+            ], category: "Alam & Musim" },
+            { id: 81, kanji: "竹", baca: "たけ", arti: "bambu", freq: 0, jukugo: [
+                { kata: "竹林", baca: "ちくりん", arti: "hutan bambu" },
+                { kata: "竹刀", baca: "しない", arti: "pedang bambu (kendo)" }
+            ], category: "Alam & Musim" },
+            { id: 82, kanji: "油", baca: "あぶら", arti: "minyak", freq: 0, jukugo: [
+                { kata: "石油", baca: "せきゆ", arti: "minyak bumi" },
+                { kata: "油絵", baca: "あぶらえ", arti: "lukisan cat minyak" }
+            ], category: "Alam & Musim" }
         ]
         
         let currentFilter = 'all'
@@ -771,8 +1117,11 @@
                 }
                 
                 let jukugoHTML = ''
-                if (item.jukugo) {
-                    jukugoHTML = `<div class="text-[10px] text-slate-400 mt-1 line-clamp-1">${item.jukugo}</div>`
+                if (Array.isArray(item.jukugo) && item.jukugo.length > 0) {
+                    const preview = item.jukugo.map(j => `${j.kata} (${j.baca})`).join(', ')
+                    jukugoHTML = `<div class="text-xs text-slate-400 mt-1 line-clamp-1">${preview}</div>`
+                } else if (typeof item.jukugo === 'string' && item.jukugo.length > 0) {
+                    jukugoHTML = `<div class="text-xs text-slate-400 mt-1 line-clamp-1">${item.jukugo}</div>`
                 }
                 
                 card.innerHTML = `
@@ -869,31 +1218,104 @@
                 romajiEl.textContent = ''
             }
             
-            // Frequency
+            // Frequency / Jukugo count badge (clickable toggle for jukugo section)
             const freqContainer = document.getElementById('modal-freq-container')
-            if (item.freq > 0) {
+            const freqInner = freqContainer.querySelector('div') || freqContainer
+            const hasJukugoData = Array.isArray(item.jukugo) && item.jukugo.length > 0
+            
+            if (hasJukugoData) {
                 freqContainer.classList.remove('hidden')
-                document.getElementById('modal-freq').innerHTML = `<strong>${item.freq}×</strong> muncul di jukugo`
+                const jukugoCount = item.jukugo.length
+                document.getElementById('modal-freq').innerHTML = `<strong>${jukugoCount}</strong> jukugo`
+                
+                // Make it look like an expandable button
+                freqContainer.style.cursor = 'pointer'
+                freqContainer.classList.add('hover:bg-amber-100', 'active:bg-amber-200', 'transition-colors')
+                freqContainer.title = 'Klik untuk buka/tutup daftar jukugo'
+                
+                // Add chevron if not already present
+                if (!freqInner.querySelector('.fa-chevron-down')) {
+                    const chevron = document.createElement('i')
+                    chevron.className = 'fa-solid fa-chevron-down ml-1 text-amber-600 transition-transform'
+                    freqInner.appendChild(chevron)
+                }
+                
+                freqContainer.onclick = () => toggleJukugoSection()
             } else {
                 freqContainer.classList.add('hidden')
+                freqContainer.onclick = null
+                freqContainer.style.cursor = 'default'
+                // remove chevron if exists
+                const chev = freqInner.querySelector('.fa-chevron-down')
+                if (chev) chev.remove()
             }
             
-            // Jukugo
+            // Jukugo section: start collapsed (hidden). User clicks freq badge to reveal.
             const jukugoContainer = document.getElementById('modal-jukugo-container')
             const jukugoDiv = document.getElementById('modal-jukugo')
             jukugoDiv.innerHTML = ''
+            jukugoDiv.className = 'flex flex-col gap-y-1.5 text-sm'
+            jukugoContainer.classList.add('hidden')   // always start collapsed
             
-            if (item.jukugo && item.jukugo.length > 0) {
-                jukugoContainer.classList.remove('hidden')
+            if (Array.isArray(item.jukugo) && item.jukugo.length > 0) {
+                // populate content but keep hidden until toggled
+                item.jukugo.forEach(j => {
+                    const row = document.createElement('div')
+                    row.className = 'flex items-baseline gap-x-2 py-0.5'
+                    
+                    // Build the kata part with per-kanji clickability
+                    const kataContainer = document.createElement('span')
+                    kataContainer.className = 'jp-font font-semibold text-base'
+                    
+                    const chars = [...j.kata]
+                    
+                    chars.forEach(char => {
+                        const isKanji = /[\u4e00-\u9faf]/.test(char)
+                        const found = isKanji ? findKanjiByChar(char) : null
+                        
+                        const charSpan = document.createElement('span')
+                        charSpan.textContent = char
+                        
+                        if (found) {
+                            // This kanji exists in our list → make it clickable
+                            charSpan.className = 'text-indigo-700 cursor-pointer hover:text-indigo-500 hover:underline active:text-indigo-600'
+                            
+                            charSpan.onclick = (e) => {
+                                e.stopImmediatePropagation()
+                                closeModal()
+                                setTimeout(() => {
+                                    openDetailModal(found)
+                                }, 120)
+                            }
+                        } else {
+                            // Not in our list or not a kanji → normal text
+                            charSpan.className = 'text-indigo-700'
+                        }
+                        
+                        kataContainer.appendChild(charSpan)
+                    })
+                    
+                    const bacaSpan = document.createElement('span')
+                    bacaSpan.className = 'font-mono text-xs text-slate-500 ml-1'
+                    bacaSpan.textContent = `(${j.baca})`
+                    
+                    const artiSpan = document.createElement('span')
+                    artiSpan.className = 'text-emerald-600 flex-1 ml-2'
+                    artiSpan.textContent = `— ${j.arti}`
+                    
+                    row.appendChild(kataContainer)
+                    row.appendChild(bacaSpan)
+                    row.appendChild(artiSpan)
+                    jukugoDiv.appendChild(row)
+                })
+            } else if (typeof item.jukugo === 'string' && item.jukugo.length > 0) {
                 const examples = item.jukugo.split(', ')
                 examples.forEach(ex => {
-                    const badge = document.createElement('span')
-                    badge.className = `px-3 py-px text-xs bg-slate-100 text-slate-600 rounded-2xl font-medium`
-                    badge.textContent = ex
-                    jukugoDiv.appendChild(badge)
+                    const row = document.createElement('div')
+                    row.className = 'text-sm text-slate-700 py-0.5'
+                    row.textContent = ex
+                    jukugoDiv.appendChild(row)
                 })
-            } else {
-                jukugoContainer.classList.add('hidden')
             }
             
             // Learn button state
@@ -918,6 +1340,42 @@
             modal.classList.add('hidden')
             currentModalKanji = null
         }
+
+        // Helper: find kanji object from our list by a single character
+        function findKanjiByChar(char) {
+            return kanjiList.find(k => k.kanji === char)
+        }
+
+        // Toggle jukugo section (expand/collapse) + scroll + flash highlight when opening
+        function toggleJukugoSection() {
+            const container = document.getElementById('modal-jukugo-container')
+            const freqContainer = document.getElementById('modal-freq-container')
+            const chevron = freqContainer ? freqContainer.querySelector('.fa-chevron-down') : null
+            
+            if (!container) return
+            
+            const isHidden = container.classList.contains('hidden')
+            
+            if (isHidden) {
+                // OPEN IT
+                container.classList.remove('hidden')
+                // scroll + highlight
+                setTimeout(() => {
+                    container.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    container.classList.add('jukugo-highlight')
+                    setTimeout(() => {
+                        container.classList.remove('jukugo-highlight')
+                    }, 1600)
+                }, 50)
+                
+                // rotate chevron
+                if (chevron) chevron.classList.add('rotate-180')
+            } else {
+                // CLOSE IT
+                container.classList.add('hidden')
+                if (chevron) chevron.classList.remove('rotate-180')
+            }
+        }
         
         // Practice / Flashcard
         function startRandomPractice() {
@@ -939,7 +1397,10 @@
             document.getElementById('flash-arti').textContent = currentPracticeKanji.arti
             
             const jukugoEl = document.getElementById('flash-jukugo')
-            if (currentPracticeKanji.jukugo) {
+            if (Array.isArray(currentPracticeKanji.jukugo) && currentPracticeKanji.jukugo.length > 0) {
+                const examples = currentPracticeKanji.jukugo.map(j => `${j.kata} (${j.baca})`).join('、 ')
+                jukugoEl.innerHTML = `<span class="text-emerald-500">例:</span> ${examples}`
+            } else if (typeof currentPracticeKanji.jukugo === 'string' && currentPracticeKanji.jukugo.length > 0) {
                 jukugoEl.innerHTML = `<span class="text-emerald-500">例:</span> ${currentPracticeKanji.jukugo}`
             } else {
                 jukugoEl.innerHTML = ''
