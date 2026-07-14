@@ -1,0 +1,1327 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ringkasan Kanji N5 • Mobile Friendly</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Noto+Sans+JP:wght@400;500;700&amp;display=swap');
+        
+        :root {
+            --primary: #4f46e5;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .jp-font {
+            font-family: 'Noto Sans JP', 'Inter', system_ui, sans-serif;
+            font-weight: 700;
+        }
+
+        .kanji-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .kanji-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        .kanji-card.learned {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+        }
+
+        .kanji-char {
+            font-size: 3.25rem;
+            line-height: 1;
+            font-weight: 800;
+            transition: transform 0.2s ease;
+        }
+
+        .kanji-card:hover .kanji-char {
+            transform: scale(1.05);
+        }
+
+        .section-header {
+            font-size: 1.35rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .filter-chip {
+            transition: all 0.1s ease;
+            white-space: nowrap;
+        }
+        
+        .filter-chip.active {
+            background-color: #4f46e5;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgb(79 70 229 / 0.3);
+        }
+
+        .modal {
+            animation: modalPop 0.2s ease forwards;
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .flashcard {
+            perspective: 1000px;
+        }
+        
+        .flashcard-inner {
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+        }
+        
+        .flashcard.flipped .flashcard-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flashcard-front, .flashcard-back {
+            backface-visibility: hidden;
+        }
+        
+        .flashcard-back {
+            transform: rotateY(180deg);
+        }
+
+        .nav-active {
+            color: #4f46e5;
+            font-weight: 600;
+        }
+
+        .kanji-grid {
+            scrollbar-width: thin;
+        }
+
+        .mini-badge {
+            font-size: 0.65rem;
+            padding: 1px 7px;
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+    <!-- Navbar -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-screen-xl mx-auto px-4">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-x-3">
+                    <div class="w-10 h-10 bg-indigo-600 rounded-2xl flex items-center justify-center shadow-inner">
+                        <span class="text-white text-3xl font-black tracking-tighter jp-font">漢</span>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-2xl tracking-tight">Ringkasan Kanji N5</h1>
+                        <p class="text-[10px] text-slate-500 -mt-1">Disederhanakan • 84 Kanji Dasar</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-x-2">
+                    <!-- Progress -->
+                    <div class="hidden sm:flex items-center gap-x-2 bg-slate-100 px-3 py-1.5 rounded-2xl text-sm">
+                        <div class="flex items-center gap-x-1.5">
+                            <i class="fa-solid fa-graduation-cap text-emerald-500"></i>
+                            <span class="font-semibold text-emerald-600" id="learned-count">0</span>
+                            <span class="text-slate-400">/ 84</span>
+                        </div>
+                        <div class="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-emerald-500 transition-all" id="progress-bar" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Practice Button -->
+                    <button onclick="startRandomPractice()"
+                            class="flex items-center gap-x-2 px-4 py-2 bg-white hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-indigo-600 font-semibold text-sm rounded-2xl transition-colors shadow-sm">
+                        <i class="fa-solid fa-dice"></i>
+                        <span class="hidden sm:inline">Latihan Acak</span>
+                    </button>
+
+                    <!-- Quiz Button -->
+                    <button onclick="openQuizSetup()"
+                            class="flex items-center gap-x-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-2xl transition-colors shadow-sm">
+                        <i class="fa-solid fa-circle-question"></i>
+                        <span class="hidden sm:inline">Kuis</span>
+                    </button>
+                    
+                    <button onclick="resetProgress()" 
+                            class="w-9 h-9 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-colors"
+                            title="Reset progress">
+                        <i class="fa-solid fa-undo text-sm"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <div class="max-w-screen-xl mx-auto px-4 pt-8 pb-6">
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-y-4">
+            <div>
+                <div class="inline-flex items-center gap-x-2 bg-white px-3 py-1 rounded-full border border-slate-200 text-xs font-medium mb-3">
+                    <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <span class="text-emerald-600 font-semibold">JLPT N5 • Prioritas Hafalan</span>
+                </div>
+                <h2 class="text-4xl md:text-5xl font-extrabold tracking-tighter">84 Kanji Dasar,<br>disusun lebih <span class="text-indigo-600">pintar</span>.</h2>
+                <p class="mt-3 max-w-md text-slate-600">Diurutkan berdasarkan frekuensi kemunculan di kata majemuk (jukugo). Fokus dulu ke TOP 15 ⭐</p>
+            </div>
+            
+            <div class="flex-shrink-0">
+                <div class="bg-white border border-slate-200 rounded-3xl p-4 text-sm max-w-[260px]">
+                    <div class="flex items-start gap-3">
+                        <i class="fa-solid fa-lightbulb text-amber-500 mt-0.5"></i>
+                        <div class="text-xs leading-snug text-slate-600">
+                            <span class="font-semibold text-slate-700">Tips:</span> Hafal TOP 15 dulu. 
+                            Kanji-kanji ini jadi kunci yang membuka paling banyak kosakata jukugo.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search + Filters -->
+    <div class="max-w-screen-xl mx-auto px-4 sticky top-16 z-40 bg-slate-50 py-4 border-b border-slate-100">
+        <div class="flex flex-col gap-3">
+            <!-- Search -->
+            <div class="relative max-w-lg">
+                <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                <input id="search-input" 
+                       type="text" 
+                       placeholder="Cari kanji, baca (te, kuchi), atau arti (tangan, mulut)..."
+                       class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 focus:border-indigo-300 rounded-2xl text-sm placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-200 transition-all"
+                       oninput="applyFilters()">
+            </div>
+            
+            <!-- Filter Chips -->
+            <div class="flex flex-wrap gap-2 overflow-x-auto pb-1 kanji-grid">
+                <button onclick="setFilter('all')" id="filter-all"
+                        class="filter-chip active px-4 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-2xl flex items-center gap-x-1.5 shadow-sm">
+                    <span>Semua</span>
+                    <span class="mini-badge bg-white/30 text-white">84</span>
+                </button>
+                
+                <button onclick="setFilter('Prioritas')" id="filter-Prioritas"
+                        class="filter-chip px-4 py-1.5 text-xs font-medium bg-white border border-slate-200 hover:bg-slate-100 rounded-2xl flex items-center gap-x-1.5">
+                    <i class="fa-solid fa-star text-amber-500"></i>
+                    <span>Prioritas (15)</span>
+                </button>
+                
+                <button onclick="setFilter('Orang & Keluarga')" id="filter-Orang & Keluarga"
+                        class="filter-chip px-4 py-1.5 text-xs font-medium bg-white border border-slate-200 hover:bg-slate-100 rounded-2xl flex items-center gap-x-1.5">
+                    <span>👤 Orang &amp; Keluarga</span>
+                </button>
+                
+                <button onclick="setFilter('Anggota Tubuh')" id="filter-Anggota Tubuh"
+                        class="filter-chip px-4 py-1.5 text-xs font-medium bg-white border border-slate-200 hover:bg-slate-100 rounded-2xl flex items-center gap-x-1.5">
+                    <span>🧍 Anggota Tubuh</span>
+                </button>
+                
+                <button onclick="setFilter('Tempat & Benda')" id="filter-Tempat & Benda"
+                        class="filter-chip px-4 py-1.5 text-xs font-medium bg-white border border-slate-200 hover:bg-slate-100 rounded-2xl flex items-center gap-x-1.5">
+                    <span>🏠 Tempat &amp; Benda</span>
+                </button>
+                
+                <button onclick="setFilter('Kata Kerja')" id="filter-Kata Kerja"
+                        class="filter-chip px-4 py-1.5 text-xs font-medium bg-white border border-slate-200 hover:bg-slate-100 rounded-2xl flex items-center gap-x-1.5">
+                    <span>🏃 Kata Kerja</span>
+                </button>
+                
+                <button onclick="setFilter('Kata Sifat')" id="filter-Kata Sifat"
+                        class="filter-chip px-4 py-1.5 text-xs font-medium bg-white border border-slate-200 hover:bg-slate-100 rounded-2xl flex items-center gap-x-1.5">
+                    <span>🎨 Kata Sifat</span>
+                </button>
+                
+                <button onclick="setFilter('Alam & Musim')" id="filter-Alam & Musim"
+                        class="filter-chip px-4 py-1.5 text-xs font-medium bg-white border border-slate-200 hover:bg-slate-100 rounded-2xl flex items-center gap-x-1.5">
+                    <span>🌿 Alam &amp; Musim</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanji Grid -->
+    <div class="max-w-screen-xl mx-auto px-4 pt-6 pb-12">
+        <div id="kanji-grid" 
+             class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3">
+            <!-- Cards populated by JS -->
+        </div>
+        
+        <div id="no-results" class="hidden text-center py-12">
+            <i class="fa-solid fa-search text-4xl text-slate-300 mb-3"></i>
+            <p class="text-slate-500">Tidak ada kanji yang cocok dengan pencarianmu.</p>
+        </div>
+    </div>
+
+    <!-- Footer Tip -->
+    <div class="max-w-screen-xl mx-auto px-4 pb-8">
+        <div class="bg-white border border-slate-100 rounded-3xl p-5 text-xs flex gap-4 items-start">
+            <div class="text-emerald-500 mt-0.5">
+                <i class="fa-solid fa-check-circle fa-lg"></i>
+            </div>
+            <div class="text-slate-600 leading-relaxed">
+                <span class="font-semibold text-slate-700">Cara belajar efektif:</span> 
+                Mulai dari ⭐ TOP 15. Setelah hafal, lanjut per tema. 
+                Gunakan tombol <span class="font-mono bg-slate-100 px-1.5 py-px rounded">Latihan Acak</span> setiap hari untuk menguatkan ingatan.
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detail-modal" onclick="if (event.target.id === 'detail-modal') closeModal()" 
+         class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-end md:items-center justify-center">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="bg-white w-full md:w-[420px] md:rounded-3xl md:m-4 rounded-t-3xl p-6 shadow-2xl modal">
+            
+            <div class="flex justify-between items-start mb-5">
+                <div>
+                    <div id="modal-kanji" class="jp-font text-[5.5rem] leading-none font-black text-indigo-600"></div>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 p-2 -mr-2">
+                    <i class="fa-solid fa-times fa-xl"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-5">
+                <!-- Reading & Meaning -->
+                <div>
+                    <div class="flex items-baseline gap-x-3">
+                        <div id="modal-baca" class="text-3xl font-semibold text-slate-700"></div>
+                        <div id="modal-romaji" class="text-sm text-slate-400 font-mono"></div>
+                    </div>
+                    <div id="modal-arti" class="text-xl font-medium text-slate-800 mt-1"></div>
+                </div>
+                
+                <!-- Frequency -->
+                <div id="modal-freq-container" class="hidden">
+                    <div class="inline-flex items-center gap-x-2 bg-amber-50 text-amber-700 px-3 py-1 rounded-2xl text-sm">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span id="modal-freq"></span>
+                    </div>
+                </div>
+                
+                <!-- Jukugo examples -->
+                <div id="modal-jukugo-container" class="hidden">
+                    <div class="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-1.5 px-1">Contoh Jukugo</div>
+                    <div id="modal-jukugo" class="flex flex-wrap gap-1.5"></div>
+                </div>
+                
+                <!-- Category -->
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div>
+                        <span class="text-slate-400">Kategori:</span> 
+                        <span id="modal-category" class="font-semibold text-slate-600"></span>
+                    </div>
+                    
+                    <button onclick="toggleLearnedFromModal()"
+                            id="modal-learn-btn"
+                            class="flex items-center gap-x-2 px-4 py-2 text-xs font-semibold rounded-2xl transition-all active:scale-[0.985]">
+                        <i class="fa-solid fa-check mr-1"></i>
+                        <span id="modal-learn-text">Tandai Sudah Hafal</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flashcard Practice Modal -->
+    <div id="practice-modal" onclick="if (event.target.id === 'practice-modal') closePracticeModal()" 
+         class="hidden fixed inset-0 bg-black/70 backdrop-blur-md z-[110] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="bg-white w-full max-w-[340px] rounded-3xl shadow-2xl overflow-hidden modal">
+            
+            <div class="px-5 pt-5 pb-3 flex items-center justify-between border-b">
+                <div class="font-semibold flex items-center gap-x-2 text-indigo-600">
+                    <i class="fa-solid fa-dice"></i>
+                    <span>Latihan Acak</span>
+                </div>
+                <button onclick="closePracticeModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times fa-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-6">
+                <!-- Flashcard -->
+                <div id="flashcard" onclick="flipFlashcard()" 
+                     class="flashcard w-full h-56 bg-slate-50 border border-slate-200 rounded-3xl cursor-pointer mb-6 relative select-none">
+                    <div class="flashcard-inner w-full h-full relative">
+                        <!-- Front -->
+                        <div class="flashcard-front absolute inset-0 flex flex-col items-center justify-center p-6 rounded-3xl">
+                            <div id="flash-kanji" class="jp-font text-[5.8rem] leading-none font-extrabold text-indigo-600 mb-1"></div>
+                            <div class="text-xs text-slate-400 tracking-[2px]">TEKAN UNTUK BALIK</div>
+                        </div>
+                        
+                        <!-- Back -->
+                        <div class="flashcard-back absolute inset-0 flex flex-col items-center justify-center p-6 rounded-3xl bg-white border border-slate-100">
+                            <div id="flash-baca" class="text-4xl font-semibold text-slate-700 mb-1"></div>
+                            <div id="flash-arti" class="text-2xl font-medium text-emerald-600"></div>
+                            
+                            <div id="flash-jukugo" class="mt-4 text-center text-xs text-slate-500 max-w-[200px]"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="markCurrentPracticeLearned()" 
+                            class="flex-1 py-3.5 text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 transition-colors text-white rounded-2xl flex items-center justify-center gap-x-2">
+                        <i class="fa-solid fa-check-double"></i>
+                        <span>Sudah Hafal</span>
+                    </button>
+                    
+                    <button onclick="nextPracticeCard()" 
+                            class="flex-1 py-3.5 text-sm font-semibold border border-slate-300 hover:bg-slate-50 active:bg-slate-100 transition-colors rounded-2xl flex items-center justify-center gap-x-2">
+                        <span>Lanjut Lainnya</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Setup Modal -->
+    <div id="quiz-setup-modal" onclick="if (event.target.id === 'quiz-setup-modal') closeQuizSetup()"
+         class="hidden fixed inset-0 bg-black/70 backdrop-blur-md z-[120] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()"
+             class="bg-white w-full max-w-[360px] rounded-3xl shadow-2xl overflow-hidden modal">
+            <div class="px-5 pt-5 pb-3 flex items-center justify-between border-b">
+                <div class="font-semibold flex items-center gap-x-2 text-indigo-600">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <span>Mulai Kuis</span>
+                </div>
+                <button onclick="closeQuizSetup()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times fa-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-5">
+                <div>
+                    <div class="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-2">Jumlah Soal</div>
+                    <div class="grid grid-cols-4 gap-2" id="quiz-count-options">
+                        <button onclick="setQuizCount(5)" data-count="5" class="quiz-opt-btn py-2 text-sm font-semibold rounded-2xl border border-slate-200 hover:bg-slate-50">5</button>
+                        <button onclick="setQuizCount(10)" data-count="10" class="quiz-opt-btn py-2 text-sm font-semibold rounded-2xl border border-slate-200 hover:bg-slate-50">10</button>
+                        <button onclick="setQuizCount(15)" data-count="15" class="quiz-opt-btn py-2 text-sm font-semibold rounded-2xl border border-slate-200 hover:bg-slate-50">15</button>
+                        <button onclick="setQuizCount(20)" data-count="20" class="quiz-opt-btn py-2 text-sm font-semibold rounded-2xl border border-slate-200 hover:bg-slate-50">20</button>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-2">Arah Soal</div>
+                    <div class="grid grid-cols-1 gap-2" id="quiz-mode-options">
+                        <button onclick="setQuizMode('kanji-to-arti')" data-mode="kanji-to-arti"
+                                class="quiz-mode-btn flex items-center gap-x-2 px-4 py-2.5 text-sm font-medium rounded-2xl border border-slate-200 hover:bg-slate-50 text-left">
+                            <span class="jp-font text-lg">漢</span>
+                            <i class="fa-solid fa-arrow-right text-xs text-slate-400"></i>
+                            <span>Kanji → Pilih Arti</span>
+                        </button>
+                        <button onclick="setQuizMode('arti-to-kanji')" data-mode="arti-to-kanji"
+                                class="quiz-mode-btn flex items-center gap-x-2 px-4 py-2.5 text-sm font-medium rounded-2xl border border-slate-200 hover:bg-slate-50 text-left">
+                            <span>Arti</span>
+                            <i class="fa-solid fa-arrow-right text-xs text-slate-400"></i>
+                            <span class="jp-font text-lg">漢</span>
+                            <span>Pilih Kanji</span>
+                        </button>
+                        <button onclick="setQuizMode('baca-to-kanji')" data-mode="baca-to-kanji"
+                                class="quiz-mode-btn flex items-center gap-x-2 px-4 py-2.5 text-sm font-medium rounded-2xl border border-slate-200 hover:bg-slate-50 text-left">
+                            <span>Cara Baca</span>
+                            <i class="fa-solid fa-arrow-right text-xs text-slate-400"></i>
+                            <span class="jp-font text-lg">漢</span>
+                            <span>Pilih Kanji</span>
+                        </button>
+                    </div>
+                </div>
+
+                <button onclick="startQuiz()"
+                        class="w-full py-3.5 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition-colors text-white rounded-2xl flex items-center justify-center gap-x-2">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Mulai Kuis</span>
+                </button>
+                <p class="text-[11px] text-center text-slate-400 -mt-2">Soal &amp; pilihan jawaban diacak setiap kali kuis dijalankan.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Question Modal -->
+    <div id="quiz-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-md z-[120] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()"
+             class="bg-white w-full max-w-[400px] rounded-3xl shadow-2xl overflow-hidden modal">
+
+            <!-- Header: progress + score -->
+            <div class="px-5 pt-5 pb-3 border-b">
+                <div class="flex items-center justify-between mb-2">
+                    <div class="text-xs font-semibold text-slate-500" id="quiz-progress-label">Soal 1 / 10</div>
+                    <div class="flex items-center gap-x-1.5 text-xs font-semibold text-emerald-600">
+                        <i class="fa-solid fa-star text-amber-400"></i>
+                        <span id="quiz-score-label">0</span>
+                    </div>
+                    <button onclick="closeQuizModal()" class="text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                </div>
+                <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div class="h-full bg-indigo-500 transition-all" id="quiz-progress-bar" style="width: 10%"></div>
+                </div>
+            </div>
+
+            <div class="p-6">
+                <!-- Question prompt -->
+                <div class="text-center mb-6">
+                    <div class="text-xs uppercase tracking-widest font-semibold text-slate-400 mb-3" id="quiz-question-label">Apa arti kanji ini?</div>
+                    <div id="quiz-prompt" class="jp-font text-6xl font-black text-indigo-600 min-h-[4.5rem] flex items-center justify-center"></div>
+                </div>
+
+                <!-- Answer options -->
+                <div id="quiz-options" class="grid grid-cols-1 gap-2.5"></div>
+
+                <!-- Feedback -->
+                <div id="quiz-feedback" class="hidden mt-4 text-center text-sm font-semibold"></div>
+
+                <button id="quiz-next-btn" onclick="nextQuizQuestion()"
+                        class="hidden w-full mt-5 py-3.5 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 transition-colors text-white rounded-2xl flex items-center justify-center gap-x-2">
+                    <span id="quiz-next-label">Soal Berikutnya</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quiz Result Modal -->
+    <div id="quiz-result-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-md z-[120] flex items-center justify-center p-4">
+        <div onclick="event.stopImmediatePropagation()"
+             class="bg-white w-full max-w-[360px] rounded-3xl shadow-2xl overflow-hidden modal text-center p-8">
+            <div class="text-5xl mb-3" id="quiz-result-emoji">🎉</div>
+            <h3 class="text-xl font-bold mb-1">Kuis Selesai!</h3>
+            <p class="text-slate-500 text-sm mb-5" id="quiz-result-subtitle">Nilai kamu:</p>
+
+            <div class="text-5xl font-black text-indigo-600 mb-1" id="quiz-result-score">0 / 0</div>
+            <div class="text-sm text-slate-500 mb-6" id="quiz-result-percent">0%</div>
+
+            <div class="flex gap-3">
+                <button onclick="closeQuizResult()"
+                        class="flex-1 py-3 text-sm font-semibold border border-slate-300 hover:bg-slate-50 transition-colors rounded-2xl">
+                    Tutup
+                </button>
+                <button onclick="retryQuiz()"
+                        class="flex-1 py-3 text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white transition-colors rounded-2xl flex items-center justify-center gap-x-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Ulangi</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind script
+        function initializeTailwind() {
+            document.documentElement.style.setProperty('--accent', '#4f46e5');
+        }
+        
+        // Data Kanji
+        const kanjiList = [
+            // TOP 15 - Prioritas
+            { id: 1, kanji: "手", baca: "て", arti: "tangan", freq: 10, jukugo: "上手, 下手, 手前, 右手", category: "Prioritas" },
+            { id: 2, kanji: "口", baca: "くち", arti: "mulut", freq: 9, jukugo: "人口, 出口, 口先", category: "Prioritas" },
+            { id: 3, kanji: "人", baca: "ひと・じん", arti: "orang", freq: 9, jukugo: "人間, 日本人, 中国人", category: "Prioritas" },
+            { id: 4, kanji: "社", baca: "しゃ", arti: "perusahaan", freq: 9, jukugo: "会社, 社会, 社長", category: "Prioritas" },
+            { id: 5, kanji: "学", baca: "がく", arti: "ilmu / belajar", freq: 7, jukugo: "大学, 見学, 小学校", category: "Prioritas" },
+            { id: 6, kanji: "会", baca: "かい", arti: "bertemu", freq: 6, jukugo: "会話, 社会, 会社", category: "Prioritas" },
+            { id: 7, kanji: "来", baca: "らい", arti: "datang", freq: 6, jukugo: "来年, 来週, 出来る", category: "Prioritas" },
+            { id: 8, kanji: "国", baca: "くに・こく", arti: "negara", freq: 6, jukugo: "中国, 帰国, 米国", category: "Prioritas" },
+            { id: 9, kanji: "目", baca: "め", arti: "mata", freq: 6, jukugo: "一目, 目上, 名目", category: "Prioritas" },
+            { id: 10, kanji: "子", baca: "こ", arti: "anak", freq: 6, jukugo: "子供, 女子, 母子", category: "Prioritas" },
+            { id: 11, kanji: "母", baca: "はは", arti: "ibu", freq: 5, jukugo: "", category: "Prioritas" },
+            { id: 12, kanji: "足", baca: "あし", arti: "kaki", freq: 5, jukugo: "", category: "Prioritas" },
+            { id: 13, kanji: "大", baca: "おおきい", arti: "besar", freq: 5, jukugo: "", category: "Prioritas" },
+            { id: 14, kanji: "校", baca: "こう", arti: "sekolah", freq: 4, jukugo: "", category: "Prioritas" },
+            { id: 15, kanji: "書", baca: "かく", arti: "menulis", freq: 4, jukugo: "", category: "Prioritas" },
+            
+            // Orang & Keluarga
+            { id: 16, kanji: "女", baca: "おんな", arti: "wanita", freq: 0, jukugo: "", category: "Orang & Keluarga" },
+            { id: 17, kanji: "男", baca: "おとこ", arti: "laki-laki", freq: 0, jukugo: "", category: "Orang & Keluarga" },
+            { id: 18, kanji: "父", baca: "ちち", arti: "ayah", freq: 0, jukugo: "", category: "Orang & Keluarga" },
+            { id: 19, kanji: "友", baca: "とも", arti: "teman", freq: 0, jukugo: "", category: "Orang & Keluarga" },
+            { id: 20, kanji: "員", baca: "いん", arti: "anggota", freq: 0, jukugo: "", category: "Orang & Keluarga" },
+            { id: 21, kanji: "名", baca: "な", arti: "nama", freq: 0, jukugo: "", category: "Orang & Keluarga" },
+            
+            // Anggota Tubuh
+            { id: 22, kanji: "頭", baca: "あたま", arti: "kepala", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            { id: 23, kanji: "耳", baca: "みみ", arti: "telinga", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            { id: 24, kanji: "体", baca: "からだ", arti: "badan", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            
+            // Tambahan Anggota Tubuh (lebih lengkap untuk N5)
+            { id: 83, kanji: "鼻", baca: "はな", arti: "hidung", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            { id: 84, kanji: "歯", baca: "は", arti: "gigi", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            { id: 85, kanji: "顔", baca: "かお", arti: "wajah", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            { id: 86, kanji: "首", baca: "くび", arti: "leher", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            { id: 87, kanji: "指", baca: "ゆび", arti: "jari", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            { id: 88, kanji: "髪", baca: "かみ", arti: "rambut", freq: 0, jukugo: "", category: "Anggota Tubuh" },
+            
+            // Tempat & Benda
+            { id: 25, kanji: "店", baca: "みせ", arti: "toko", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            { id: 26, kanji: "車", baca: "くるま", arti: "mobil", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            { id: 27, kanji: "道", baca: "みち", arti: "jalan", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            { id: 28, kanji: "駅", baca: "えき", arti: "stasiun", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            { id: 29, kanji: "本", baca: "ほん", arti: "buku", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            { id: 30, kanji: "電", baca: "でん", arti: "listrik", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            { id: 31, kanji: "家", baca: "いえ", arti: "rumah", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            { id: 32, kanji: "田", baca: "た", arti: "sawah", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            { id: 33, kanji: "門", baca: "もん", arti: "gerbang", freq: 0, jukugo: "", category: "Tempat & Benda" },
+            
+            // Kata Kerja
+            { id: 34, kanji: "行", baca: "いく", arti: "pergi", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 35, kanji: "帰", baca: "かえる", arti: "pulang", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 36, kanji: "入", baca: "はいる", arti: "masuk", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 37, kanji: "出", baca: "でる", arti: "keluar", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 38, kanji: "聞", baca: "きく", arti: "mendengar", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 39, kanji: "見", baca: "みる", arti: "melihat", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 40, kanji: "言", baca: "いう", arti: "mengucapkan", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 41, kanji: "読", baca: "よむ", arti: "membaca", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 42, kanji: "話", baca: "はなす", arti: "berbicara", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 43, kanji: "買", baca: "かう", arti: "membeli", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 44, kanji: "立", baca: "たつ", arti: "berdiri", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 45, kanji: "食", baca: "たべる", arti: "makan", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 46, kanji: "売", baca: "うる", arti: "jual", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 47, kanji: "飲", baca: "のむ", arti: "minum", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 48, kanji: "持", baca: "もつ", arti: "membawa", freq: 0, jukugo: "", category: "Kata Kerja" },
+            { id: 49, kanji: "待", baca: "まつ", arti: "menunggu", freq: 0, jukugo: "", category: "Kata Kerja" },
+            
+            // Kata Sifat
+            { id: 50, kanji: "安", baca: "やすい", arti: "murah", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 51, kanji: "高", baca: "たかい", arti: "tinggi / mahal", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 52, kanji: "新", baca: "あたらしい", arti: "baru", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 53, kanji: "古", baca: "ふるい", arti: "tua / lama", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 54, kanji: "小", baca: "ちいさい", arti: "kecil", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 55, kanji: "多", baca: "おおい", arti: "banyak", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 56, kanji: "少", baca: "すくない", arti: "sedikit", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 57, kanji: "好", baca: "すき", arti: "suka", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 58, kanji: "長", baca: "ながい", arti: "panjang", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 59, kanji: "短", baca: "みじかい", arti: "pendek", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 60, kanji: "白", baca: "しろい", arti: "putih", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 61, kanji: "黒", baca: "くろい", arti: "hitam", freq: 0, jukugo: "", category: "Kata Sifat" },
+            { id: 62, kanji: "明", baca: "あかるい", arti: "terang", freq: 0, jukugo: "", category: "Kata Sifat" },
+            
+            // Alam & Musim
+            { id: 63, kanji: "天", baca: "てん", arti: "surga / langit", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 64, kanji: "空", baca: "そら", arti: "langit", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 65, kanji: "山", baca: "やま", arti: "gunung", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 66, kanji: "川", baca: "かわ", arti: "sungai", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 67, kanji: "花", baca: "はな", arti: "bunga", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 68, kanji: "雨", baca: "あめ", arti: "hujan", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 69, kanji: "魚", baca: "さかな", arti: "ikan", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 70, kanji: "気", baca: "き", arti: "udara / jiwa", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 71, kanji: "牛", baca: "うし", arti: "sapi", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 72, kanji: "貝", baca: "かい", arti: "kerang", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 73, kanji: "力", baca: "ちから", arti: "kekuatan", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 74, kanji: "馬", baca: "うま", arti: "kuda", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 75, kanji: "冬", baca: "ふゆ", arti: "musim dingin", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 76, kanji: "秋", baca: "あき", arti: "musim gugur", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 77, kanji: "夏", baca: "なつ", arti: "musim panas", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 78, kanji: "春", baca: "はる", arti: "musim semi", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 79, kanji: "米", baca: "こめ", arti: "beras", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 80, kanji: "石", baca: "いし", arti: "batu", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 81, kanji: "竹", baca: "たけ", arti: "bambu", freq: 0, jukugo: "", category: "Alam & Musim" },
+            { id: 82, kanji: "油", baca: "あぶら", arti: "minyak", freq: 0, jukugo: "", category: "Alam & Musim" }
+        ]
+        
+        let currentFilter = 'all'
+        let currentSearch = ''
+        let learnedKanji = new Set()
+        let currentModalKanji = null
+        let currentPracticeKanji = null
+        let isFlipped = false
+        
+        // Load learned from localStorage
+        function loadLearned() {
+            const saved = localStorage.getItem('learnedKanjiN5')
+            if (saved) {
+                learnedKanji = new Set(JSON.parse(saved))
+            }
+            updateProgress()
+        }
+        
+        function saveLearned() {
+            localStorage.setItem('learnedKanjiN5', JSON.stringify([...learnedKanji]))
+            updateProgress()
+        }
+        
+        function updateProgress() {
+            const count = learnedKanji.size
+            const percent = Math.round((count / kanjiList.length) * 100)
+            
+            document.getElementById('learned-count').textContent = count
+            const bar = document.getElementById('progress-bar')
+            bar.style.width = `${percent}%`
+            
+            // Update color intensity
+            if (percent > 70) {
+                bar.style.backgroundColor = '#10b981'
+            } else if (percent > 40) {
+                bar.style.backgroundColor = '#34d399'
+            } else {
+                bar.style.backgroundColor = '#4ade80'
+            }
+        }
+        
+        function isLearned(kanji) {
+            return learnedKanji.has(kanji)
+        }
+        
+        function toggleLearned(kanji) {
+            if (learnedKanji.has(kanji)) {
+                learnedKanji.delete(kanji)
+            } else {
+                learnedKanji.add(kanji)
+                // subtle celebration
+                showMiniConfetti()
+            }
+            saveLearned()
+            applyFilters() // re-render to update card styles
+        }
+        
+        function toggleLearnedFromModal() {
+            if (!currentModalKanji) return
+            toggleLearned(currentModalKanji.kanji)
+            
+            // Update button text
+            const btn = document.getElementById('modal-learn-btn')
+            const text = document.getElementById('modal-learn-text')
+            
+            if (isLearned(currentModalKanji.kanji)) {
+                btn.className = `flex items-center gap-x-2 px-4 py-2 text-xs font-semibold rounded-2xl transition-all bg-emerald-100 text-emerald-700 active:scale-[0.985]`
+                text.textContent = 'Sudah Hafal ✓'
+            } else {
+                btn.className = `flex items-center gap-x-2 px-4 py-2 text-xs font-semibold rounded-2xl transition-all border border-slate-300 hover:bg-slate-50 active:scale-[0.985]`
+                text.textContent = 'Tandai Sudah Hafal'
+            }
+        }
+        
+        function showMiniConfetti() {
+            const colors = ['#6366f1', '#a5b4fc', '#4f46e5']
+            for (let i = 0; i < 12; i++) {
+                const particle = document.createElement('div')
+                particle.style.position = 'fixed'
+                particle.style.left = Math.random() * window.innerWidth + 'px'
+                particle.style.top = '-10px'
+                particle.style.width = '6px'
+                particle.style.height = '6px'
+                particle.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px'
+                particle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)]
+                particle.style.zIndex = '9999'
+                particle.style.pointerEvents = 'none'
+                document.body.appendChild(particle)
+                
+                const duration = 900 + Math.random() * 600
+                const angle = Math.random() * 60 - 30
+                
+                particle.animate([
+                    { 
+                        transform: `translateY(0) rotate(0deg)`,
+                        opacity: 1 
+                    },
+                    { 
+                        transform: `translateY(${window.innerHeight + 40}px) rotate(${angle * 3}deg)`,
+                        opacity: 0 
+                    }
+                ], {
+                    duration: duration,
+                    easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)'
+                }).onfinish = () => particle.remove()
+            }
+        }
+        
+        // Render all cards
+        function renderKanjiGrid(filteredList) {
+            const grid = document.getElementById('kanji-grid')
+            grid.innerHTML = ''
+            document.getElementById('no-results').classList.add('hidden')
+            
+            if (filteredList.length === 0) {
+                document.getElementById('no-results').classList.remove('hidden')
+                return
+            }
+            
+            filteredList.forEach(item => {
+                const isLearnedItem = isLearned(item.kanji)
+                
+                const card = document.createElement('div')
+                card.className = `kanji-card bg-white border ${isLearnedItem ? 'border-emerald-300 learned' : 'border-slate-200'} rounded-3xl p-4 cursor-pointer flex flex-col`
+                
+                let freqHTML = ''
+                if (item.freq > 0) {
+                    freqHTML = `
+                        <div class="mt-auto pt-3 flex items-center justify-between">
+                            <div class="mini-badge bg-amber-100 text-amber-700 font-medium flex items-center gap-1 px-2 py-px">
+                                <i class="fa-solid fa-star text-[9px]"></i>
+                                <span class="font-bold">${item.freq}x</span>
+                            </div>
+                        </div>
+                    `
+                } else {
+                    freqHTML = `<div class="mt-auto pt-3"></div>`
+                }
+                
+                let jukugoHTML = ''
+                if (item.jukugo) {
+                    jukugoHTML = `<div class="text-[10px] text-slate-400 mt-1 line-clamp-1">${item.jukugo}</div>`
+                }
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <div class="jp-font kanji-char text-indigo-600">${item.kanji}</div>
+                        </div>
+                        
+                        <div class="flex flex-col items-end">
+                            <button onclick="event.stopImmediatePropagation(); toggleLearned('${item.kanji}');" 
+                                    class="text-lg transition-colors ${isLearnedItem ? 'text-emerald-500 hover:text-emerald-600' : 'text-slate-300 hover:text-emerald-400'}">
+                                <i class="fa-solid ${isLearnedItem ? 'fa-check-circle' : 'fa-circle'}"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-1">
+                        <div class="font-semibold text-lg leading-tight">${item.baca}</div>
+                        <div class="text-emerald-600 font-medium text-[15px]">${item.arti}</div>
+                        
+                        ${jukugoHTML}
+                        
+                        ${freqHTML}
+                    </div>
+                `
+                
+                // Click card to open modal (but not on the check button)
+                card.onclick = (e) => {
+                    if (!e.target.closest('button')) {
+                        openDetailModal(item)
+                    }
+                }
+                
+                grid.appendChild(card)
+            })
+        }
+        
+        // Filter logic
+        function applyFilters() {
+            currentSearch = document.getElementById('search-input').value.toLowerCase().trim()
+            
+            let filtered = kanjiList
+            
+            // Category filter
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(k => k.category === currentFilter)
+            }
+            
+            // Search filter
+            if (currentSearch.length > 0) {
+                filtered = filtered.filter(k => 
+                    k.kanji.toLowerCase().includes(currentSearch) ||
+                    k.baca.toLowerCase().includes(currentSearch) ||
+                    k.arti.toLowerCase().includes(currentSearch)
+                )
+            }
+            
+            renderKanjiGrid(filtered)
+        }
+        
+        function setFilter(filter) {
+            // Update active chip styles
+            document.querySelectorAll('.filter-chip').forEach(chip => {
+                chip.classList.remove('active', 'bg-indigo-600', 'text-white')
+                chip.classList.add('bg-white', 'border', 'border-slate-200')
+                
+                if (filter === 'all' && chip.id === 'filter-all') {
+                    chip.classList.add('active', 'bg-indigo-600', 'text-white')
+                    chip.classList.remove('bg-white', 'border', 'border-slate-200')
+                } else if (chip.id === `filter-${filter}`) {
+                    chip.classList.add('active', 'bg-indigo-600', 'text-white')
+                    chip.classList.remove('bg-white', 'border', 'border-slate-200')
+                }
+            })
+            
+            currentFilter = filter
+            applyFilters()
+        }
+        
+        // Modal Detail
+        function openDetailModal(item) {
+            currentModalKanji = item
+            
+            document.getElementById('modal-kanji').textContent = item.kanji
+            document.getElementById('modal-baca').textContent = item.baca
+            document.getElementById('modal-arti').textContent = item.arti
+            document.getElementById('modal-category').textContent = item.category
+            
+            // Romaji hint (simple)
+            const romajiEl = document.getElementById('modal-romaji')
+            if (item.baca.includes('・')) {
+                romajiEl.textContent = item.baca.replace('・', ' / ')
+            } else {
+                romajiEl.textContent = ''
+            }
+            
+            // Frequency
+            const freqContainer = document.getElementById('modal-freq-container')
+            if (item.freq > 0) {
+                freqContainer.classList.remove('hidden')
+                document.getElementById('modal-freq').innerHTML = `<strong>${item.freq}×</strong> muncul di jukugo`
+            } else {
+                freqContainer.classList.add('hidden')
+            }
+            
+            // Jukugo
+            const jukugoContainer = document.getElementById('modal-jukugo-container')
+            const jukugoDiv = document.getElementById('modal-jukugo')
+            jukugoDiv.innerHTML = ''
+            
+            if (item.jukugo && item.jukugo.length > 0) {
+                jukugoContainer.classList.remove('hidden')
+                const examples = item.jukugo.split(', ')
+                examples.forEach(ex => {
+                    const badge = document.createElement('span')
+                    badge.className = `px-3 py-px text-xs bg-slate-100 text-slate-600 rounded-2xl font-medium`
+                    badge.textContent = ex
+                    jukugoDiv.appendChild(badge)
+                })
+            } else {
+                jukugoContainer.classList.add('hidden')
+            }
+            
+            // Learn button state
+            const btn = document.getElementById('modal-learn-btn')
+            const text = document.getElementById('modal-learn-text')
+            
+            if (isLearned(item.kanji)) {
+                btn.className = `flex items-center gap-x-2 px-4 py-2 text-xs font-semibold rounded-2xl transition-all bg-emerald-100 text-emerald-700 active:scale-[0.985]`
+                text.textContent = 'Sudah Hafal ✓'
+            } else {
+                btn.className = `flex items-center gap-x-2 px-4 py-2 text-xs font-semibold rounded-2xl transition-all border border-slate-300 hover:bg-slate-50 active:scale-[0.985]`
+                text.textContent = 'Tandai Sudah Hafal'
+            }
+            
+            document.getElementById('detail-modal').classList.remove('hidden')
+            document.getElementById('detail-modal').classList.add('flex')
+        }
+        
+        function closeModal() {
+            const modal = document.getElementById('detail-modal')
+            modal.classList.remove('flex')
+            modal.classList.add('hidden')
+            currentModalKanji = null
+        }
+        
+        // Practice / Flashcard
+        function startRandomPractice() {
+            // Find unlearned first, fallback to all
+            let candidates = kanjiList.filter(k => !isLearned(k.kanji))
+            
+            if (candidates.length === 0) {
+                candidates = [...kanjiList] // all if everything learned
+            }
+            
+            // Pick random
+            const randomIndex = Math.floor(Math.random() * candidates.length)
+            currentPracticeKanji = candidates[randomIndex]
+            isFlipped = false
+            
+            // Setup flashcard
+            document.getElementById('flash-kanji').textContent = currentPracticeKanji.kanji
+            document.getElementById('flash-baca').textContent = currentPracticeKanji.baca
+            document.getElementById('flash-arti').textContent = currentPracticeKanji.arti
+            
+            const jukugoEl = document.getElementById('flash-jukugo')
+            if (currentPracticeKanji.jukugo) {
+                jukugoEl.innerHTML = `<span class="text-emerald-500">例:</span> ${currentPracticeKanji.jukugo}`
+            } else {
+                jukugoEl.innerHTML = ''
+            }
+            
+            // Reset flip state
+            const flashcard = document.getElementById('flashcard')
+            flashcard.classList.remove('flipped')
+            
+            document.getElementById('practice-modal').classList.remove('hidden')
+            document.getElementById('practice-modal').classList.add('flex')
+        }
+        
+        function flipFlashcard() {
+            const flashcard = document.getElementById('flashcard')
+            isFlipped = !isFlipped
+            if (isFlipped) {
+                flashcard.classList.add('flipped')
+            } else {
+                flashcard.classList.remove('flipped')
+            }
+        }
+        
+        function markCurrentPracticeLearned() {
+            if (!currentPracticeKanji) return
+            if (!isLearned(currentPracticeKanji.kanji)) {
+                learnedKanji.add(currentPracticeKanji.kanji)
+                saveLearned()
+                applyFilters()
+            }
+            // Nice feedback
+            const flashcard = document.getElementById('flashcard')
+            flashcard.style.transitionDuration = '80ms'
+            flashcard.style.transform = 'scale(0.96)'
+            
+            setTimeout(() => {
+                flashcard.style.transform = ''
+                flashcard.style.transitionDuration = '0.5s'
+                closePracticeModal()
+                // Show next automatically? or just close
+            }, 180)
+        }
+        
+        function nextPracticeCard() {
+            closePracticeModal()
+            // Small delay then open new one
+            setTimeout(() => {
+                startRandomPractice()
+            }, 180)
+        }
+        
+        function closePracticeModal() {
+            const modal = document.getElementById('practice-modal')
+            modal.classList.remove('flex')
+            modal.classList.add('hidden')
+            currentPracticeKanji = null
+        }
+        
+        function resetProgress() {
+            if (confirm('Yakin mau reset semua progress hafalan?')) {
+                learnedKanji.clear()
+                localStorage.removeItem('learnedKanjiN5')
+                updateProgress()
+                applyFilters()
+            }
+        }
+        
+        // ===== Kuis Interaktif =====
+        let quizConfig = { count: 10, mode: 'kanji-to-arti' }
+        let quizQuestions = []
+        let quizIndex = 0
+        let quizScore = 0
+        let quizAnswered = false
+
+        function shuffleArray(arr) {
+            const a = [...arr]
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1))
+                ;[a[i], a[j]] = [a[j], a[i]]
+            }
+            return a
+        }
+
+        function openQuizSetup() {
+            setQuizCount(quizConfig.count)
+            setQuizMode(quizConfig.mode)
+            document.getElementById('quiz-setup-modal').classList.remove('hidden')
+            document.getElementById('quiz-setup-modal').classList.add('flex')
+        }
+
+        function closeQuizSetup() {
+            document.getElementById('quiz-setup-modal').classList.remove('flex')
+            document.getElementById('quiz-setup-modal').classList.add('hidden')
+        }
+
+        function setQuizCount(count) {
+            quizConfig.count = count
+            document.querySelectorAll('.quiz-opt-btn').forEach(btn => {
+                const active = parseInt(btn.dataset.count) === count
+                btn.classList.toggle('bg-indigo-600', active)
+                btn.classList.toggle('text-white', active)
+                btn.classList.toggle('border-indigo-600', active)
+                btn.classList.toggle('border-slate-200', !active)
+            })
+        }
+
+        function setQuizMode(mode) {
+            quizConfig.mode = mode
+            document.querySelectorAll('.quiz-mode-btn').forEach(btn => {
+                const active = btn.dataset.mode === mode
+                btn.classList.toggle('bg-indigo-50', active)
+                btn.classList.toggle('border-indigo-400', active)
+                btn.classList.toggle('border-slate-200', !active)
+            })
+        }
+
+        // Build a fresh randomized question set: random kanji subset, random order,
+        // and randomized (shuffled) multiple-choice options each time the quiz runs.
+        function generateQuizQuestions() {
+            const count = Math.min(quizConfig.count, kanjiList.length)
+            const chosen = shuffleArray(kanjiList).slice(0, count)
+
+            return chosen.map(item => {
+                let correctText, promptText, getOptionText, questionLabel
+
+                if (quizConfig.mode === 'kanji-to-arti') {
+                    promptText = item.kanji
+                    correctText = item.arti
+                    getOptionText = (k) => k.arti
+                    questionLabel = 'Apa arti kanji ini?'
+                } else if (quizConfig.mode === 'arti-to-kanji') {
+                    promptText = item.arti
+                    correctText = item.kanji
+                    getOptionText = (k) => k.kanji
+                    questionLabel = 'Kanji mana yang artinya ini?'
+                } else {
+                    promptText = item.baca
+                    correctText = item.kanji
+                    getOptionText = (k) => k.kanji
+                    questionLabel = 'Kanji mana yang dibaca seperti ini?'
+                }
+
+                // Pick 3 random wrong options from the rest of the kanji list
+                const wrongPool = shuffleArray(kanjiList.filter(k => k.kanji !== item.kanji))
+                const wrongOptions = []
+                const seen = new Set([correctText])
+                for (const k of wrongPool) {
+                    const text = getOptionText(k)
+                    if (!seen.has(text)) {
+                        seen.add(text)
+                        wrongOptions.push(text)
+                    }
+                    if (wrongOptions.length === 3) break
+                }
+
+                const options = shuffleArray([correctText, ...wrongOptions])
+
+                return {
+                    kanji: item.kanji,
+                    promptText,
+                    correctText,
+                    questionLabel,
+                    isJapaneseOptions: quizConfig.mode !== 'kanji-to-arti',
+                    isJapanesePrompt: quizConfig.mode !== 'baca-to-kanji' && quizConfig.mode !== 'arti-to-kanji' ? true : (quizConfig.mode === 'kanji-to-arti'),
+                    options
+                }
+            })
+        }
+
+        function startQuiz() {
+            quizQuestions = generateQuizQuestions()
+            quizIndex = 0
+            quizScore = 0
+            closeQuizSetup()
+            document.getElementById('quiz-modal').classList.remove('hidden')
+            document.getElementById('quiz-modal').classList.add('flex')
+            renderQuizQuestion()
+        }
+
+        function renderQuizQuestion() {
+            quizAnswered = false
+            const q = quizQuestions[quizIndex]
+
+            document.getElementById('quiz-progress-label').textContent = `Soal ${quizIndex + 1} / ${quizQuestions.length}`
+            document.getElementById('quiz-score-label').textContent = quizScore
+            document.getElementById('quiz-progress-bar').style.width = `${((quizIndex) / quizQuestions.length) * 100}%`
+            document.getElementById('quiz-question-label').textContent = q.questionLabel
+
+            const promptEl = document.getElementById('quiz-prompt')
+            promptEl.textContent = q.promptText
+            promptEl.className = q.mode === 'kanji-to-arti'
+                ? 'jp-font text-6xl font-black text-indigo-600 min-h-[4.5rem] flex items-center justify-center'
+                : (quizConfig.mode === 'kanji-to-arti'
+                    ? 'jp-font text-6xl font-black text-indigo-600 min-h-[4.5rem] flex items-center justify-center'
+                    : 'text-2xl font-bold text-indigo-600 min-h-[4.5rem] flex items-center justify-center text-center px-2')
+
+            const optionsContainer = document.getElementById('quiz-options')
+            optionsContainer.innerHTML = ''
+            q.options.forEach(optText => {
+                const btn = document.createElement('button')
+                btn.textContent = optText
+                const isJp = quizConfig.mode !== 'kanji-to-arti'
+                btn.className = `quiz-answer-btn w-full py-3 px-4 text-left rounded-2xl border border-slate-200 hover:bg-slate-50 transition-colors text-sm font-medium ${isJp ? 'jp-font text-xl text-center' : ''}`
+                btn.onclick = () => selectQuizAnswer(optText, btn)
+                optionsContainer.appendChild(btn)
+            })
+
+            document.getElementById('quiz-feedback').classList.add('hidden')
+            document.getElementById('quiz-next-btn').classList.add('hidden')
+            document.getElementById('quiz-next-label').textContent =
+                quizIndex === quizQuestions.length - 1 ? 'Lihat Hasil' : 'Soal Berikutnya'
+        }
+
+        function selectQuizAnswer(selectedText, btnEl) {
+            if (quizAnswered) return
+            quizAnswered = true
+
+            const q = quizQuestions[quizIndex]
+            const isCorrect = selectedText === q.correctText
+            if (isCorrect) quizScore++
+
+            // Highlight all options
+            document.querySelectorAll('.quiz-answer-btn').forEach(btn => {
+                btn.onclick = null
+                if (btn.textContent === q.correctText) {
+                    btn.classList.add('bg-emerald-50', 'border-emerald-400', 'text-emerald-700')
+                } else if (btn === btnEl) {
+                    btn.classList.add('bg-red-50', 'border-red-400', 'text-red-600')
+                } else {
+                    btn.classList.add('opacity-50')
+                }
+            })
+
+            const feedback = document.getElementById('quiz-feedback')
+            feedback.classList.remove('hidden')
+            if (isCorrect) {
+                feedback.className = 'mt-4 text-center text-sm font-semibold text-emerald-600'
+                feedback.innerHTML = '<i class="fa-solid fa-circle-check mr-1"></i> Benar!'
+            } else {
+                feedback.className = 'mt-4 text-center text-sm font-semibold text-red-500'
+                feedback.innerHTML = `<i class="fa-solid fa-circle-xmark mr-1"></i> Kurang tepat. Jawaban benar: ${q.correctText}`
+            }
+
+            document.getElementById('quiz-score-label').textContent = quizScore
+            document.getElementById('quiz-next-btn').classList.remove('hidden')
+        }
+
+        function nextQuizQuestion() {
+            if (quizIndex < quizQuestions.length - 1) {
+                quizIndex++
+                renderQuizQuestion()
+            } else {
+                finishQuiz()
+            }
+        }
+
+        function finishQuiz() {
+            document.getElementById('quiz-modal').classList.remove('flex')
+            document.getElementById('quiz-modal').classList.add('hidden')
+
+            const total = quizQuestions.length
+            const percent = Math.round((quizScore / total) * 100)
+
+            let emoji = '🙂'
+            let subtitle = 'Terus berlatih ya!'
+            if (percent === 100) { emoji = '🏆'; subtitle = 'Sempurna! Kamu hebat!' }
+            else if (percent >= 80) { emoji = '🎉'; subtitle = 'Bagus sekali!' }
+            else if (percent >= 60) { emoji = '👍'; subtitle = 'Lumayan, tingkatkan lagi!' }
+            else { emoji = '💪'; subtitle = 'Jangan menyerah, ulangi lagi!' }
+
+            document.getElementById('quiz-result-emoji').textContent = emoji
+            document.getElementById('quiz-result-subtitle').textContent = subtitle
+            document.getElementById('quiz-result-score').textContent = `${quizScore} / ${total}`
+            document.getElementById('quiz-result-percent').textContent = `${percent}%`
+
+            document.getElementById('quiz-result-modal').classList.remove('hidden')
+            document.getElementById('quiz-result-modal').classList.add('flex')
+        }
+
+        function closeQuizModal() {
+            if (quizQuestions.length > 0) {
+                if (!confirm('Keluar dari kuis? Progres kuis ini tidak akan disimpan.')) return
+            }
+            document.getElementById('quiz-modal').classList.remove('flex')
+            document.getElementById('quiz-modal').classList.add('hidden')
+            quizQuestions = []
+        }
+
+        function closeQuizResult() {
+            document.getElementById('quiz-result-modal').classList.remove('flex')
+            document.getElementById('quiz-result-modal').classList.add('hidden')
+            quizQuestions = []
+        }
+
+        function retryQuiz() {
+            document.getElementById('quiz-result-modal').classList.remove('flex')
+            document.getElementById('quiz-result-modal').classList.add('hidden')
+            // Re-generate with fresh random kanji + shuffled options
+            startQuiz()
+        }
+
+        // Keyboard support
+        function setupKeyboard() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault()
+                    document.getElementById('search-input').focus()
+                }
+                
+                if (e.key === 'Escape') {
+                    const detail = document.getElementById('detail-modal')
+                    const practice = document.getElementById('practice-modal')
+                    const quizSetup = document.getElementById('quiz-setup-modal')
+                    const quiz = document.getElementById('quiz-modal')
+                    const quizResult = document.getElementById('quiz-result-modal')
+                    
+                    if (!detail.classList.contains('hidden')) {
+                        closeModal()
+                    } else if (!practice.classList.contains('hidden')) {
+                        closePracticeModal()
+                    } else if (!quizSetup.classList.contains('hidden')) {
+                        closeQuizSetup()
+                    } else if (!quizResult.classList.contains('hidden')) {
+                        closeQuizResult()
+                    } else if (!quiz.classList.contains('hidden')) {
+                        closeQuizModal()
+                    }
+                }
+                
+                if (e.key.toLowerCase() === 'r' && e.metaKey) {
+                    e.preventDefault()
+                    startRandomPractice()
+                }
+            })
+            
+            // Hint in console for power users
+            console.log('%c[Kanji N5] Tekan "/" untuk fokus ke pencarian. Cmd/Ctrl + R untuk latihan acak.', 'color:#64748b')
+        }
+        
+        // Initialize everything
+        function initializeApp() {
+            initializeTailwind()
+            loadLearned()
+            
+            // Render initial grid (all)
+            renderKanjiGrid(kanjiList)
+            
+            // Set initial active filter
+            const allChip = document.getElementById('filter-all')
+            allChip.classList.add('active', 'bg-indigo-600', 'text-white')
+            allChip.classList.remove('bg-white', 'border', 'border-slate-200')
+            
+            // Search on type
+            const searchInput = document.getElementById('search-input')
+            searchInput.addEventListener('input', () => {
+                applyFilters()
+            })
+            
+            setupKeyboard()
+            setQuizCount(quizConfig.count)
+            setQuizMode(quizConfig.mode)
+            
+            // Easter egg: click logo to practice
+            const logo = document.querySelector('.fa-graduation-cap')
+            if (logo) {
+                logo.parentElement.onclick = () => startRandomPractice()
+            }
+            
+            // Initial tip toast (only once)
+            setTimeout(() => {
+                if (learnedKanji.size === 0) {
+                    // Can add a subtle welcome toast if wanted
+                }
+            }, 4200)
+            
+            // Make sure progress is shown correctly
+            updateProgress()
+            
+            console.log('%c[Kanji N5] HTML siap! 84 kanji + interaktif + mobile friendly.', 'color:#64748b; font-size: 9px')
+        }
+        
+        // Boot app
+        window.onload = initializeApp
+    </script>
+</body>
+</html>
