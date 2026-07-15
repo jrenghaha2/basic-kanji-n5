@@ -1346,6 +1346,31 @@
             return kanjiList.find(k => k.kanji === char)
         }
 
+        // Collect all valid jukugo where ALL kanji characters exist in our list
+        function getValidJukugoForQuiz() {
+            const valid = []
+            kanjiList.forEach(k => {
+                if (Array.isArray(k.jukugo)) {
+                    k.jukugo.forEach(j => {
+                        const chars = [...j.kata].filter(c => /[\u4e00-\u9faf]/.test(c))
+                        if (chars.length >= 2) { // only compounds with 2+ kanji
+                            const allExist = chars.every(ch => findKanjiByChar(ch) !== undefined)
+                            if (allExist) {
+                                valid.push({
+                                    type: 'jukugo',
+                                    kata: j.kata,
+                                    baca: j.baca,
+                                    arti: j.arti,
+                                    source: k.kanji
+                                })
+                            }
+                        }
+                    })
+                }
+            })
+            return valid
+        }
+
         // Toggle jukugo section (expand/collapse) + scroll + flash highlight when opening
         function toggleJukugoSection() {
             const container = document.getElementById('modal-jukugo-container')
@@ -1520,51 +1545,130 @@
         // Build a fresh randomized question set: random kanji subset, random order,
         // and randomized (shuffled) multiple-choice options each time the quiz runs.
         function generateQuizQuestions() {
-            const count = Math.min(quizConfig.count, kanjiList.length)
-            const chosen = shuffleArray(kanjiList).slice(0, count)
-
-            return chosen.map(item => {
-                let correctText, promptText, getOptionText, questionLabel
-
-                if (quizConfig.mode === 'kanji-to-arti') {
-                    promptText = item.kanji
-                    correctText = item.arti
-                    getOptionText = (k) => k.arti
-                    questionLabel = 'Apa arti kanji ini?'
-                } else if (quizConfig.mode === 'arti-to-kanji') {
-                    promptText = item.arti
-                    correctText = item.kanji
-                    getOptionText = (k) => k.kanji
-                    questionLabel = 'Kanji mana yang artinya ini?'
+            const count = quizConfig.count
+            const validJukugo = getValidJukugoForQuiz()
+            
+            const questions = []
+            
+            for (let i = 0; i < count; i++) {
+                // 50% chance kanji, 50% chance jukugo (lebih adil)
+                const pickJukugo = Math.random() < 0.5 && validJukugo.length > 0
+                
+                let entry
+                if (pickJukugo) {
+                    entry = {
+                        type: 'jukugo',
+                        data: validJukugo[Math.floor(Math.random() * validJukugo.length)]
+                    }
                 } else {
-                    promptText = item.baca
-                    correctText = item.kanji
-                    getOptionText = (k) => k.kanji
-                    questionLabel = 'Kanji mana yang dibaca seperti ini?'
+                    entry = {
+                        type: 'kanji',
+                        data: kanjiList[Math.floor(Math.random() * kanjiList.length)]
+                    }
+                }
+                
+                questions.push(entry)
+            }
+
+            return questions.map(entry => {
+                let correctText, promptText, getOptionText, questionLabel, isJukugo = false
+
+                if (entry.type === 'jukugo') {
+                    isJukugo = true
+                    const j = entry.data
+                    
+                    if (quizConfig.mode === 'kanji-to-arti') {
+                        promptText = j.kata
+                        correctText = j.arti
+                        getOptionText = (item) => item.type === 'jukugo' ? item.data.arti : item.data.arti
+                        questionLabel = 'Apa arti jukugo ini?'
+                    } else if (quizConfig.mode === 'arti-to-kanji') {
+                        promptText = j.arti
+                        correctText = j.kata
+                        getOptionText = (item) => item.type === 'jukugo' ? item.data.kata : item.data.kanji
+                        questionLabel = 'Jukugo mana yang artinya ini?'
+                    } else {
+                        // baca-to-kanji for jukugo
+                        promptText = j.baca
+                        correctText = j.kata
+                        getOptionText = (item) => item.type === 'jukugo' ? item.data.kata : item.data.kanji
+                        questionLabel = 'Jukugo mana yang dibaca seperti ini?'
+                    }
+                } else {
+                    // Single kanji (existing logic)
+                    const item = entry.data
+                    if (quizConfig.mode === 'kanji-to-arti') {
+                        promptText = item.kanji
+                        correctText = item.arti
+                        getOptionText = (k) => k.type === 'jukugo' ? k.data.arti : k.data.arti
+                        questionLabel = 'Apa arti kanji ini?'
+                    } else if (quizConfig.mode === 'arti-to-kanji') {
+                        promptText = item.arti
+                        correctText = item.kanji
+                        getOptionText = (k) => k.type === 'jukugo' ? k.data.kata : k.data.kanji
+                        questionLabel = 'Kanji mana yang artinya ini?'
+                    } else {
+                        promptText = item.baca
+                        correctText = item.kanji
+                        getOptionText = (k) => k.type === 'jukugo' ? k.data.kata : k.data.kanji
+                        questionLabel = 'Kanji mana yang dibaca seperti ini?'
+                    }
                 }
 
-                // Pick 3 random wrong options from the rest of the kanji list
-                const wrongPool = shuffleArray(kanjiList.filter(k => k.kanji !== item.kanji))
+                // Build wrong options (3 options)
                 const wrongOptions = []
                 const seen = new Set([correctText])
-                for (const k of wrongPool) {
-                    const text = getOptionText(k)
-                    if (!seen.has(text)) {
-                        seen.add(text)
-                        wrongOptions.push(text)
+
+                if (entry.type === 'jukugo') {
+                    // Wrong options from other jukugo + some kanji
+                    const otherJukugo = validJukugo.filter(j => j.kata !== entry.data.kata)
+                    const shuffledJukugo = shuffleArray(otherJukugo)
+                    
+                    for (const j of shuffledJukugo) {
+                        const text = (quizConfig.mode === 'kanji-to-arti') ? j.arti : j.kata
+                        if (!seen.has(text)) {
+                            seen.add(text)
+                            wrongOptions.push(text)
+                        }
+                        if (wrongOptions.length === 3) break
                     }
-                    if (wrongOptions.length === 3) break
+                    
+                    // Fill remaining with kanji if needed
+                    if (wrongOptions.length < 3) {
+                        const shuffledKanji = shuffleArray(kanjiList)
+                        for (const k of shuffledKanji) {
+                            const text = (quizConfig.mode === 'kanji-to-arti') ? k.arti : k.kanji
+                            if (!seen.has(text)) {
+                                seen.add(text)
+                                wrongOptions.push(text)
+                            }
+                            if (wrongOptions.length === 3) break
+                        }
+                    }
+                } else {
+                    // Wrong options from other kanji
+                    const otherKanji = kanjiList.filter(k => k.kanji !== entry.data.kanji)
+                    const shuffled = shuffleArray(otherKanji)
+                    
+                    for (const k of shuffled) {
+                        const text = (quizConfig.mode === 'kanji-to-arti') ? k.arti : k.kanji
+                        if (!seen.has(text)) {
+                            seen.add(text)
+                            wrongOptions.push(text)
+                        }
+                        if (wrongOptions.length === 3) break
+                    }
                 }
 
                 const options = shuffleArray([correctText, ...wrongOptions])
 
                 return {
-                    kanji: item.kanji,
+                    isJukugo: entry.type === 'jukugo',
                     promptText,
                     correctText,
                     questionLabel,
                     isJapaneseOptions: quizConfig.mode !== 'kanji-to-arti',
-                    isJapanesePrompt: quizConfig.mode !== 'baca-to-kanji' && quizConfig.mode !== 'arti-to-kanji' ? true : (quizConfig.mode === 'kanji-to-arti'),
+                    isJapanesePrompt: quizConfig.mode === 'kanji-to-arti' || (entry.type === 'jukugo' && quizConfig.mode !== 'arti-to-kanji'),
                     options
                 }
             })
